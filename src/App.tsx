@@ -93,7 +93,7 @@ function App() {
             />
 
             {/* Default routes */}
-            <Route path="/" element={<Navigate to="/login" />} />
+            {/* <Route path="/" element={<Navigate to="/login" />} /> */}
             <Route path="*" element={<Navigate to="/login" />} />
           </Routes>
         </div>
