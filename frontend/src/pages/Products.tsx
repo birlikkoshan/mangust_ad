@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { productsAPI, Product } from '../api/products';
 import { categoriesAPI, Category } from '../api/categories';
-
 const Products = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -70,7 +69,7 @@ const Products = () => {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+      <div className="card">
         <h1>Products</h1>
         <button className="btn btn-primary" onClick={() => setShowForm(!showForm)}>
           {showForm ? 'Cancel' : 'Add Product'}
@@ -87,7 +86,7 @@ const Products = () => {
           style={{ padding: '8px', marginLeft: '10px' }}
         >
           <option value="">All Categories</option>
-          {categories.map((cat) => (
+          {categories?.map((cat) => (
             <option key={cat.id} value={cat.id}>
               {cat.name}
             </option>
@@ -142,7 +141,7 @@ const Products = () => {
                 required
               >
                 <option value="">Select Category</option>
-                {categories.map((cat) => (
+                {categories?.map((cat) => (
                   <option key={cat.id} value={cat.id}>
                     {cat.name}
                   </option>
@@ -167,7 +166,7 @@ const Products = () => {
             </tr>
           </thead>
           <tbody>
-            {products.map((product) => (
+            {products?.map((product) => (
               <tr key={product.id}>
                 <td>
                   <Link to={`/products/${product.id}`}>{product.name}</Link>

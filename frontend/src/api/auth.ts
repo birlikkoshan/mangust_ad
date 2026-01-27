@@ -1,4 +1,4 @@
-import apiClient from './client';
+import apiClient, { CurrentUser, UserRole } from './client';
 
 export interface RegisterData {
   email: string;
@@ -14,12 +14,7 @@ export interface LoginData {
 export interface AuthResponse {
   message: string;
   data: {
-    user: {
-      id: string;
-      email: string;
-      name: string;
-      role: string;
-    };
+    user: CurrentUser;
     token: string;
   };
 }
@@ -33,5 +28,25 @@ export const authAPI = {
   login: async (data: LoginData): Promise<AuthResponse> => {
     const response = await apiClient.post('/auth/login', data);
     return response.data;
+  },
+  
+  registerAdmin: async (data: RegisterData): Promise<AuthResponse> => {
+    const response = await apiClient.post('/auth/admin', data);
+    return response.data;
+  },
+
+  /**
+   * Helper to check if the current user is admin on the client-side.
+   * Relies on the `user` object saved to localStorage after login.
+   */
+  isAdmin: (): boolean => {
+    try {
+      const raw = localStorage.getItem('user');
+      if (!raw) return false;
+      const user = JSON.parse(raw) as { role?: UserRole };
+      return user.role === 'admin';
+    } catch {
+      return false;
+    }
   },
 };

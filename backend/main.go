@@ -81,6 +81,13 @@ func setupRouter() *gin.Engine {
 	protected := api.Group("")
 	protected.Use(middleware.AuthMiddleware())
 	{
+		// Admin-only auth route to create new admins
+		admin := protected.Group("")
+		admin.Use(middleware.AdminOnly())
+		{
+			admin.POST("/auth/admin", authHandler.RegisterAdmin)
+		}
+
 		// User routes
 		protected.GET("/users", userHandler.GetUsers)
 		protected.GET("/users/:id", userHandler.GetUser)

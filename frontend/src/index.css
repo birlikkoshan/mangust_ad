@@ -135,6 +135,7 @@ code {
   text-decoration: none;
   margin-left: 20px;
   padding: 5px 10px;
+  font-size: 16px;
   border-radius: 4px;
   transition: background-color 0.3s;
 }

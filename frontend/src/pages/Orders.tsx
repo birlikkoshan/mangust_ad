@@ -92,7 +92,7 @@ const Orders = () => {
         <div className="card">
           <h3>Create Order</h3>
           <form onSubmit={handleSubmit}>
-            {orderItems.map((item, index) => (
+            {orderItems?.map((item, index) => (
               <div key={index} style={{ display: 'flex', gap: '10px', marginBottom: '10px', alignItems: 'center' }}>
                 <select
                   value={item.productId}
@@ -101,7 +101,7 @@ const Orders = () => {
                   style={{ flex: 2 }}
                 >
                   <option value="">Select Product</option>
-                  {products.map((p) => (
+                  {products?.map((p) => (
                     <option key={p.id} value={p.id}>
                       {p.name} - ${p.price.toFixed(2)} (Stock: {p.stock})
                     </option>
@@ -145,7 +145,7 @@ const Orders = () => {
             </tr>
           </thead>
           <tbody>
-            {orders.map((order) => (
+            {orders?.map((order) => (
               <tr key={order.id}>
                 <td>{order.id.substring(0, 8)}...</td>
                 <td>{order.user?.name || order.userId}</td>

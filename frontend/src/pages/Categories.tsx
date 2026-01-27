@@ -113,7 +113,7 @@ const Categories = () => {
             </tr>
           </thead>
           <tbody>
-            {categories.map((category) => (
+            {categories?.map((category) => (
               <tr key={category.id}>
                 <td>{category.name}</td>
                 <td>{category.description || 'N/A'}</td>

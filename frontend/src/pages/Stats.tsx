@@ -66,7 +66,7 @@ const Stats = () => {
               </tr>
             </thead>
             <tbody>
-              {salesStats.map((stat, index) => (
+              {salesStats?.map((stat, index) => (
                 <tr key={index}>
                   <td>{stat.category}</td>
                   <td>${stat.totalRevenue.toFixed(2)}</td>
@@ -94,7 +94,7 @@ const Stats = () => {
               </tr>
             </thead>
             <tbody>
-              {productStats.map((stat, index) => (
+              {productStats?.map((stat, index) => (
                 <tr key={index}>
                   <td>{stat.name}</td>
                   <td>{stat.categoryName || 'N/A'}</td>

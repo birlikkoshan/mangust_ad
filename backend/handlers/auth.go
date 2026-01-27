@@ -72,6 +72,53 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	utils.SendSuccessResponse(c, http.StatusCreated, "User registered successfully", user)
 }
 
+// RegisterAdmin creates a new admin user.
+// This handler MUST be protected by AuthMiddleware + AdminOnly on the router level.
+func (h *AuthHandler) RegisterAdmin(c *gin.Context) {
+	var req RegisterRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.SendErrorResponse(c, http.StatusBadRequest, "Bad Request: "+err.Error())
+		return
+	}
+
+	// Check if user exists
+	var existingUser models.User
+	err := database.DB.Collection("users").FindOne(c, bson.M{"email": req.Email}).Decode(&existingUser)
+	if err == nil {
+		utils.SendErrorResponse(c, http.StatusConflict, "Email already registered")
+		return
+	}
+	if err != mongo.ErrNoDocuments {
+		utils.SendErrorResponse(c, http.StatusInternalServerError, "Database error")
+		return
+	}
+
+	// Create admin user
+	user := models.User{
+		ID:        primitive.NewObjectID(),
+		Email:     req.Email,
+		Password:  req.Password,
+		Name:      req.Name,
+		Role:      "admin",
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+
+	if err := user.HashPassword(); err != nil {
+		utils.SendErrorResponse(c, http.StatusInternalServerError, "Failed to hash password")
+		return
+	}
+
+	_, err = database.DB.Collection("users").InsertOne(c, user)
+	if err != nil {
+		utils.SendErrorResponse(c, http.StatusInternalServerError, "Failed to create admin user")
+		return
+	}
+
+	user.Password = ""
+	utils.SendSuccessResponse(c, http.StatusCreated, "Admin user created successfully", user)
+}
+
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

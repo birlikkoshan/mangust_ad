@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authAPI } from '../api/auth';
+import { notifyAuthChanged } from '../api/client';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -18,6 +19,7 @@ const Login = () => {
       const response = await authAPI.login({ email, password });
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
+      notifyAuthChanged();
       navigate('/products');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Login failed');
