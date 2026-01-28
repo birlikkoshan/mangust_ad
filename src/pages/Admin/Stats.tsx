@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { statsAPI, SalesStat, ProductStat } from '../api/stats';
+import { statsAPI, SalesStat, ProductStat } from '../../api/Admin/stats';
 
 const Stats = () => {
   const [salesStats, setSalesStats] = useState<SalesStat[]>([]);

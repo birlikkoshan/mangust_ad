@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { ordersAPI, Order } from '../api/orders';
-import { productsAPI, Product } from '../api/products';
+import { ordersAPI, Order } from '../../api/Admin/orders';
+import { productsAPI, Product } from '../../api/Admin/products';
 
 const Orders = () => {
   const [orders, setOrders] = useState<Order[]>([]);

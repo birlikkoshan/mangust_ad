@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { authAPI, RegisterData } from '../api/auth';
-import { getCurrentUserRole } from '../api/client';
+import { authAPI, RegisterData } from '../../api/auth';
+import { getCurrentUserRole } from '../../api/Admin/client';
 
 const AddAdmin = () => {
   const [form, setForm] = useState<RegisterData>({
@@ -35,18 +35,15 @@ const AddAdmin = () => {
       // This page is intended for admin-only use; role elevation
       // should be handled on the backend (e.g. dedicated endpoint).
       const response = await authAPI.registerAdmin(form);
-      setSuccess(`Admin candidate created: ${response.data.user.email}`);
-      setForm({ name: '', email: '', password: '' });
+      setSuccess(`Admin candidate created: ${response?.data?.user?.email}`);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to create admin');
-    } finally {
-      setLoading(false);
-    }
+    } 
   };
 
   return (
-    <div style={{ maxWidth: '500px', margin: '20px auto' }}>
-      <div className="card">
+    <div style={{ maxWidth: '500px', margin: '20px auto', padding: '20px' }}>
+      <div className="card" style={{ padding: '20px' }}>
         <h2 style={{ marginBottom: '20px' }}>Add New Admin</h2>
         {!isAdmin && (
           <div className="alert alert-error" style={{ marginBottom: '15px' }}>

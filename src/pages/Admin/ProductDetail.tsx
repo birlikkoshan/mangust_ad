@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { productsAPI, Product } from '../api/products';
+import { productsAPI, Product } from '../../api/Admin/products';
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();

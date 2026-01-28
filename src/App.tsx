@@ -3,13 +3,13 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import AdminNavbar from './components/AdminNavbar';
 import UserNavbar from './components/UserNavbar';
 import Login from './pages/Login';
-import Register from './pages/Register';
-import Products from './pages/Products';
-import ProductDetail from './pages/ProductDetail';
-import Categories from './pages/Categories';
-import Orders from './pages/Orders';
-import Stats from './pages/Stats';
-import AddAdmin from './pages/AddAdmin';
+import Register from './pages/Admin/Register';
+import Products from './pages/Admin/Products';
+import ProductDetail from './pages/Admin/ProductDetail';
+import Categories from './pages/Admin/Categories';
+import Orders from './pages/Admin/Orders';
+import Stats from './pages/Admin/Stats';
+import AddAdmin from './pages/Admin/AddAdmin';
 import './App.css';
 
 type Role = 'admin' | 'user' | null;

@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { notifyAuthChanged } from '../api/client';
+import { notifyAuthChanged } from '../api/Admin/client';
 
 const Navbar = () => {
   const navigate = useNavigate();

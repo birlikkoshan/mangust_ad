@@ -1,4 +1,4 @@
-import apiClient, { CurrentUser, UserRole } from './client';
+import apiClient, { CurrentUser, UserRole } from './Admin/client';
 
 export interface RegisterData {
   email: string;
@@ -11,12 +11,23 @@ export interface LoginData {
   password: string;
 }
 
+// Backend login response structure: { access_token, user }
+export interface LoginResponse {
+  access_token: string;
+  user: CurrentUser;
+}
+
+// Backend register response might have different structure
 export interface AuthResponse {
-  message: string;
-  data: {
+  message?: string;
+  data?: {
     user: CurrentUser;
-    access_token: string;
+    token?: string;
+    access_token?: string;
   };
+  // Or flat structure for login
+  access_token?: string;
+  user?: CurrentUser;
 }
 
 export const authAPI = {
@@ -25,7 +36,7 @@ export const authAPI = {
     return response.data;
   },
 
-  login: async (data: LoginData): Promise<AuthResponse> => {
+  login: async (data: LoginData): Promise<LoginResponse> => {
     const response = await apiClient.post('/auth/login', data);
     return response.data;
   },

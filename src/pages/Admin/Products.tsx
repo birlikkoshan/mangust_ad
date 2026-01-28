@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { productsAPI, Product } from '../api/products';
-import { categoriesAPI, Category } from '../api/categories';
+import { productsAPI, Product } from '../../api/Admin/products';
+import { categoriesAPI, Category } from '../../api/Admin/categories';
 const Products = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);

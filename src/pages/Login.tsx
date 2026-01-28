@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { authAPI } from '../api/auth';
-import { notifyAuthChanged } from '../api/client';
+import { notifyAuthChanged } from '../api/Admin/client';
 
 function getErrorMessage(err: unknown): string {
   // Axios-like error shape
@@ -35,8 +35,10 @@ const Login = () => {
     try {
       const response = await authAPI.login({ email, password });
 
-      const access_token = response?.data?.access_token;
-      const user = response?.data?.user;
+      // Backend returns { access_token, user } directly (flat structure)
+      // authAPI.login already returns response.data, so response is the flat object
+      const access_token = response?.access_token;
+      const user = response?.user;
 
       if (typeof access_token !== 'string' || !access_token) {
         throw new Error('Login succeeded but token is missing in response');
