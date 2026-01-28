@@ -3,7 +3,7 @@ import { notifyAuthChanged } from '../api/client';
 
 const Navbar = () => {
   const navigate = useNavigate();
-  const isAuthenticated = !!localStorage.getItem('token');
+  const isAuthenticated = !!localStorage.getItem('access_token');
 
   let user: { name?: string; email?: string; role?: string } = {};
   try {
@@ -18,7 +18,7 @@ const Navbar = () => {
   const isAdmin = user.role === 'admin';
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
+    localStorage.removeItem('access_token');
     localStorage.removeItem('user');
     notifyAuthChanged();
     navigate('/login');

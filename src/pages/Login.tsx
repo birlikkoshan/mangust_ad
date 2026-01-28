@@ -35,10 +35,10 @@ const Login = () => {
     try {
       const response = await authAPI.login({ email, password });
 
-      const token = response?.data?.access_token;
+      const access_token = response?.data?.access_token;
       const user = response?.data?.user;
 
-      if (typeof token !== 'string' || !token) {
+      if (typeof access_token !== 'string' || !access_token) {
         throw new Error('Login succeeded but token is missing in response');
       }
       if (!user || typeof user !== 'object') {
@@ -46,7 +46,7 @@ const Login = () => {
       }
 
       try {
-        localStorage.setItem('token', token);
+        localStorage.setItem('access_token', access_token);
         localStorage.setItem('user', JSON.stringify(user));
       } catch {
         // If storage is blocked/quota exceeded, show clear info instead of "Login failed"

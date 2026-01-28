@@ -15,7 +15,7 @@ import './App.css';
 type Role = 'admin' | 'user' | null;
 
 const readAuth = (): { isAuthenticated: boolean; role: Role } => {
-  const token = localStorage.getItem('token');
+  const access_token = localStorage.getItem('access_token');
   let role: Role = null;
 
   try {
@@ -31,7 +31,7 @@ const readAuth = (): { isAuthenticated: boolean; role: Role } => {
   }
 
   return {
-    isAuthenticated: !!token,
+    isAuthenticated: !!access_token,
     role,
   };
 };
