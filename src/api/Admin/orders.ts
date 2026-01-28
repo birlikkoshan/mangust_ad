@@ -37,12 +37,6 @@ export interface UpdateOrderStatusData {
   status: string;
 }
 
-// Helper to extract array from response (handles { data: [...] } vs [...])
-function extractArray(data: any): any[] {
-  if (Array.isArray(data)) return data;
-  if (data && Array.isArray(data.data)) return data.data;
-  return [];
-}
 
 // Helper to normalize order item
 function normalizeOrderItem(raw: any): OrderItem {
