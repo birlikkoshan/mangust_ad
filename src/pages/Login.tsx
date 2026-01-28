@@ -35,8 +35,6 @@ const Login = () => {
     try {
       const response = await authAPI.login({ email, password });
 
-      // Backend returns { access_token, user } directly (flat structure)
-      // authAPI.login already returns response.data, so response is the flat object
       const access_token = response?.access_token;
       const user = response?.user;
 
@@ -60,7 +58,6 @@ const Login = () => {
       notifyAuthChanged();
       setSuccess('Login successful');
 
-      // If your app is admin-only after login, you can redirect all users here.
       navigate('/products');
     } catch (err) {
       setError(getErrorMessage(err));

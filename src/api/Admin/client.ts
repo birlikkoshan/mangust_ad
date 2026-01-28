@@ -1,9 +1,10 @@
-import axios from 'axios';
+import axios from "axios";
 
 const API_BASE_URL =
-  (import.meta as any).env?.VITE_API_URL || 'http://localhost:8080/api/v1';
+  (import.meta as any).env?.VITE_API_URL ||
+  "https://aitu-ad-final-back-production.up.railway.app/api/v1";
 
-export type UserRole = 'admin' | 'user';
+export type UserRole = "admin" | "user";
 
 export interface CurrentUser {
   id: string;
@@ -16,12 +17,16 @@ export interface CurrentUser {
  * Safely read current user from localStorage.
  */
 export const getCurrentUser = (): CurrentUser | null => {
-  const raw = localStorage.getItem('user');
+  const raw = localStorage.getItem("user");
   if (!raw) return null;
 
   try {
     const parsed = JSON.parse(raw);
-    if (parsed && typeof parsed === 'object' && typeof parsed.role === 'string') {
+    if (
+      parsed &&
+      typeof parsed === "object" &&
+      typeof parsed.role === "string"
+    ) {
       return parsed as CurrentUser;
     }
   } catch {
@@ -44,20 +49,20 @@ export const getCurrentUserRole = (): UserRole | null => {
  * Used after login / logout to trigger re-computation of isAdmin.
  */
 export const notifyAuthChanged = () => {
-  window.dispatchEvent(new Event('auth-changed'));
+  window.dispatchEvent(new Event("auth-changed"));
 };
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
 // Add access_token to requests
 apiClient.interceptors.request.use(
   (config) => {
-    const access_token = localStorage.getItem('access_token');
+    const access_token = localStorage.getItem("access_token");
     if (access_token) {
       config.headers.Authorization = `Bearer ${access_token}`;
     }
@@ -65,7 +70,7 @@ apiClient.interceptors.request.use(
   },
   (error) => {
     return Promise.reject(error);
-  }
+  },
 );
 
 // Handle auth errors
@@ -73,12 +78,12 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("user");
+      window.location.href = "/login";
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 export default apiClient;

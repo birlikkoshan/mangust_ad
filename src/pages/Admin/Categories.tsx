@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react';
-import { categoriesAPI, Category } from '../../api/Admin/categories';
+import { useState, useEffect } from "react";
+import { categoriesAPI, Category } from "../../api/Admin/categories";
 
 const Categories = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState({ name: '', description: '' });
+  const [formData, setFormData] = useState({ name: "", description: "" });
   const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -19,7 +19,7 @@ const Categories = () => {
       const data = await categoriesAPI.getAll();
       setCategories(data);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to load categories');
+      setError(err.response?.data?.message || "Failed to load categories");
     } finally {
       setLoading(false);
     }
@@ -35,10 +35,10 @@ const Categories = () => {
         await categoriesAPI.create(formData);
       }
       setShowForm(false);
-      setFormData({ name: '', description: '' });
+      setFormData({ name: "", description: "" });
       loadCategories();
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to save category');
+      setError(err.response?.data?.message || "Failed to save category");
     }
   };
 
@@ -49,12 +49,12 @@ const Categories = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this category?')) return;
+    if (!confirm("Are you sure you want to delete this category?")) return;
     try {
       await categoriesAPI.delete(id);
       loadCategories();
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to delete category');
+      setError(err.response?.data?.message || "Failed to delete category");
     }
   };
 
@@ -62,14 +62,24 @@ const Categories = () => {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "20px",
+        }}
+      >
         <h1>Categories</h1>
-        <button className="btn btn-primary" onClick={() => {
-          setShowForm(!showForm);
-          setEditingId(null);
-          setFormData({ name: '', description: '' });
-        }}>
-          {showForm ? 'Cancel' : 'Add Category'}
+        <button
+          className="btn btn-primary"
+          onClick={() => {
+            setShowForm(!showForm);
+            setEditingId(null);
+            setFormData({ name: "", description: "" });
+          }}
+        >
+          {showForm ? "Cancel" : "Add Category"}
         </button>
       </div>
 
@@ -77,14 +87,16 @@ const Categories = () => {
 
       {showForm && (
         <div className="card">
-          <h3>{editingId ? 'Edit' : 'Create'} Category</h3>
+          <h3>{editingId ? "Edit" : "Create"} Category</h3>
           <form onSubmit={handleSubmit}>
             <div className="form-group">
               <label>Name</label>
               <input
                 type="text"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
                 required
               />
             </div>
@@ -92,11 +104,13 @@ const Categories = () => {
               <label>Description</label>
               <textarea
                 value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
               />
             </div>
             <button type="submit" className="btn btn-primary">
-              {editingId ? 'Update' : 'Create'}
+              {editingId ? "Update" : "Create"}
             </button>
           </form>
         </div>
@@ -116,16 +130,19 @@ const Categories = () => {
             {categories?.map((category) => (
               <tr key={category.id}>
                 <td>{category.name}</td>
-                <td>{category.description || 'N/A'}</td>
+                <td>{category.description || "N/A"}</td>
                 <td>{new Date(category.createdAt).toLocaleDateString()}</td>
                 <td>
-                  <button className="btn btn-primary" onClick={() => handleEdit(category)}>
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => handleEdit(category)}
+                  >
                     Edit
                   </button>
                   <button
                     className="btn btn-danger"
                     onClick={() => handleDelete(category.id)}
-                    style={{ marginLeft: '5px' }}
+                    style={{ marginLeft: "5px" }}
                   >
                     Delete
                   </button>

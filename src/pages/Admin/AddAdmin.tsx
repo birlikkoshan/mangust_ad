@@ -31,9 +31,6 @@ const AddAdmin = () => {
         return;
       }
 
-      // NOTE: Backend currently creates users with role="user".
-      // This page is intended for admin-only use; role elevation
-      // should be handled on the backend (e.g. dedicated endpoint).
       const response = await authAPI.registerAdmin(form);
       setSuccess(`Admin candidate created: ${response?.data?.user?.email}`);
     } catch (err: any) {
