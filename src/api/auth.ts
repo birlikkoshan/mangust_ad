@@ -15,7 +15,7 @@ export interface AuthResponse {
   message: string;
   data: {
     user: CurrentUser;
-    token: string;
+    access_token: string;
   };
 }
 
