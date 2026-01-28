@@ -35,7 +35,7 @@ const Login = () => {
     try {
       const response = await authAPI.login({ email, password });
 
-      const token = response?.data?.token;
+      const token = response?.data?.access_token;
       const user = response?.data?.user;
 
       if (typeof token !== 'string' || !token) {
