@@ -1,28 +1,67 @@
 import { useState } from 'react';
-import {  Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { authAPI } from '../api/auth';
 import { notifyAuthChanged } from '../api/client';
-// useNavigate,
+
+function getErrorMessage(err: unknown): string {
+  // Axios-like error shape
+  const anyErr = err as any;
+  const apiMessage = anyErr?.response?.data?.message;
+  if (typeof apiMessage === 'string' && apiMessage.trim().length > 0) return apiMessage;
+
+  if (anyErr?.response?.status) {
+    return `Request failed (${anyErr.response.status})`;
+  }
+
+  if (err instanceof Error && err.message) return err.message;
+
+  return 'Login failed';
+}
+
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
-  // const navigate = useNavigate();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
     setLoading(true);
 
     try {
       const response = await authAPI.login({ email, password });
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+
+      const token = response?.data?.token;
+      const user = response?.data?.user;
+
+      if (typeof token !== 'string' || !token) {
+        throw new Error('Login succeeded but token is missing in response');
+      }
+      if (!user || typeof user !== 'object') {
+        throw new Error('Login succeeded but user is missing in response');
+      }
+
+      try {
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(user));
+      } catch {
+        // If storage is blocked/quota exceeded, show clear info instead of "Login failed"
+        setSuccess('Logged in, but browser blocked saving session. Please allow storage/cookies.');
+        notifyAuthChanged();
+        return;
+      }
+
       notifyAuthChanged();
-      // navigate('/products');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Login failed');
+      setSuccess('Login successful');
+
+      // If your app is admin-only after login, you can redirect all users here.
+      navigate('/products');
+    } catch (err) {
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -33,6 +72,7 @@ const Login = () => {
       <div className="card">
         <h2 style={{ marginBottom: '20px' }}>Login</h2>
         {error && <div className="alert alert-error">{error}</div>}
+        {success && <div className="alert alert-success">{success}</div>}
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label>Email</label>
@@ -41,6 +81,7 @@ const Login = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              autoComplete="email"
             />
           </div>
           <div className="form-group">
@@ -50,9 +91,15 @@ const Login = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              autoComplete="current-password"
             />
           </div>
-          <button type="submit" className="btn btn-primary" disabled={loading} style={{ width: '100%' }}>
+          <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={loading}
+            style={{ width: '100%' }}
+          >
             {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
