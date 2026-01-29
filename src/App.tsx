@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import AdminNavbar from './components/AdminNavbar';
-import UserNavbar from './components/UserNavbar';
+import AdminNavbar from './components/Admin/AdminNavbar';
+import UserNavbar from './components/User/UserNavbar';
 import Login from './pages/Login';
 import Register from './pages/Admin/Register';
 import Products from './pages/Admin/Products';
