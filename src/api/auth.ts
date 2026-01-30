@@ -42,7 +42,7 @@ export const authAPI = {
   },
   
   registerAdmin: async (data: RegisterData): Promise<AuthResponse> => {
-    const response = await apiClient.post('/auth/admin', data);
+    const response = await apiClient.post('/admin/auth/register', data);
     return response.data;
   },
 

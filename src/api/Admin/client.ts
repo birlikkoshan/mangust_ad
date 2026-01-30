@@ -2,7 +2,7 @@ import axios from "axios";
 
 const API_BASE_URL =
   (import.meta as any).env?.VITE_API_URL ||
-  "https://aitu-ad-final-back-production.up.railway.app/api/v1";
+  "http://localhost:8080/api/v1";
 
 export type UserRole = "admin" | "user";
 
