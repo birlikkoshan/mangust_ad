@@ -84,17 +84,30 @@ function normalizeProduct(raw: any): Product {
   };
 }
 
+export interface PaginatedProducts {
+  items: Product[];
+  total?: number;
+}
+
 export const productsAPI = {
-  getAll: async (categoryId?: string): Promise<Product[]> => {
-    const params = categoryId ? { categoryId } : {};
+  getAll: async (
+    categoryId?: string,
+    pagination?: { offset?: number; limit?: number }
+  ): Promise<PaginatedProducts> => {
+    const { offset = 0, limit = 10 } = pagination ?? {};
+    const params: Record<string, number | string> = { offset, limit };
+    if (categoryId) params.categoryId = categoryId;
     const response = await apiClient.get('/products', { params });
     const raw = extractArray(response.data);
-    return raw.map(normalizeProduct);
+    const items = raw.map(normalizeProduct);
+    const total = response.data?.total;
+    return { items, total };
   },
 
   getById: async (id: string): Promise<Product> => {
     const response = await apiClient.get(`/products/${id}`);
-    return normalizeProduct(response.data);
+    const raw = response.data?.data ?? response.data;
+    return normalizeProduct(raw);
   },
 
   create: async (data: CreateProductData): Promise<Product> => {
@@ -112,7 +125,12 @@ export const productsAPI = {
   },
 
   addReview: async (id: string, data: AddReviewData): Promise<Product> => {
-    const response = await apiClient.post(`/admin/products/${id}/reviews`, data);
-    return normalizeProduct(response.data);
+    const response = await apiClient.post(`/products/${id}/reviews`, data);
+    const raw = response.data?.data ?? response.data;
+    return normalizeProduct(raw);
+  },
+
+  deleteReview: async (productId: string, reviewId: string): Promise<void> => {
+    await apiClient.delete(`/products/${productId}/reviews/${reviewId}`);
   },
 };

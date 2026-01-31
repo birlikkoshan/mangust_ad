@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { statsAPI, SalesStats, ProductStats } from '../../api/Admin/stats';
+import { statsAPI, SalesStats, ProductStats, StatsFilters } from '../../api/Admin/stats';
 import {
   PieChart,
   Pie,
@@ -20,19 +20,27 @@ const Stats = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState<'sales' | 'products'>('sales');
+  const [year, setYear] = useState<string>('');
+  const [start, setStart] = useState<string>('');
+  const [end, setEnd] = useState<string>('');
 
   useEffect(() => {
     loadStats();
-  }, [activeTab]);
+  }, [activeTab, year, start, end]);
+
+  const filters: StatsFilters = {};
+  if (year) filters.year = parseInt(year, 10);
+  if (start) filters.start = start;
+  if (end) filters.end = end;
 
   const loadStats = async () => {
     try {
       setLoading(true);
       if (activeTab === 'sales') {
-        const data = await statsAPI.getSalesStats();
+        const data = await statsAPI.getSalesStats(filters);
         setSalesStats(data);
       } else {
-        const data = await statsAPI.getProductStats();
+        const data = await statsAPI.getProductStats(filters);
         setProductStats(data);
       }
     } catch (err: any) {
@@ -72,6 +80,42 @@ const Stats = () => {
       </div>
 
       {error && <div className="alert alert-error">{error}</div>}
+
+      <div className="card" style={{ marginBottom: '20px' }}>
+        <h3>Filters</h3>
+        <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
+          <label>
+            Year:
+            <input
+              type="number"
+              min="2020"
+              max="2030"
+              value={year}
+              onChange={(e) => setYear(e.target.value)}
+              placeholder="e.g. 2024"
+              style={{ marginLeft: '8px', padding: '6px 10px', width: '100px' }}
+            />
+          </label>
+          <label>
+            Start:
+            <input
+              type="date"
+              value={start}
+              onChange={(e) => setStart(e.target.value)}
+              style={{ marginLeft: '8px', padding: '6px 10px' }}
+            />
+          </label>
+          <label>
+            End:
+            <input
+              type="date"
+              value={end}
+              onChange={(e) => setEnd(e.target.value)}
+              style={{ marginLeft: '8px', padding: '6px 10px' }}
+            />
+          </label>
+        </div>
+      </div>
 
       {activeTab === 'sales' && salesStats && (
         <div>

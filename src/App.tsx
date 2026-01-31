@@ -8,8 +8,16 @@ import Products from './pages/Admin/Products';
 import ProductDetail from './pages/Admin/ProductDetail';
 import Categories from './pages/Admin/Categories';
 import Orders from './pages/Admin/Orders';
+import OrderDetail from './pages/Admin/OrderDetail';
 import Stats from './pages/Admin/Stats';
 import AddAdmin from './pages/Admin/AddAdmin';
+import UserProductCatalog from './pages/User/ProductCatalog';
+import UserProductDetail from './pages/User/ProductDetail';
+import UserOrderList from './pages/User/OrderList';
+import UserOrderDetail from './pages/User/OrderDetail';
+import UserCreateOrder from './pages/User/CreateOrder';
+import UserWishlist from './pages/User/Wishlist';
+import UserProfile from './pages/User/Profile';
 import './App.css';
 
 type Role = 'admin' | 'user' | null;
@@ -84,6 +92,10 @@ function App() {
               element={isAdmin ? <Orders /> : <Navigate to="/login" />}
             />
             <Route
+              path="/orders/:id"
+              element={isAdmin ? <OrderDetail /> : <Navigate to="/login" />}
+            />
+            <Route
               path="/stats"
               element={isAdmin ? <Stats /> : <Navigate to="/login" />}
             />
@@ -92,9 +104,39 @@ function App() {
               element={isAdmin ? <AddAdmin /> : <Navigate to="/login" />}
             />
 
+            {/* User (non-admin) routes */}
+            <Route
+              path="/shop"
+              element={isAuthenticated ? <UserProductCatalog /> : <Navigate to="/login" />}
+            />
+            <Route
+              path="/shop/products/:id"
+              element={isAuthenticated ? <UserProductDetail /> : <Navigate to="/login" />}
+            />
+            <Route
+              path="/shop/orders"
+              element={isAuthenticated ? <UserOrderList /> : <Navigate to="/login" />}
+            />
+            <Route
+              path="/shop/orders/new"
+              element={isAuthenticated ? <UserCreateOrder /> : <Navigate to="/login" />}
+            />
+            <Route
+              path="/shop/orders/:id"
+              element={isAuthenticated ? <UserOrderDetail /> : <Navigate to="/login" />}
+            />
+            <Route
+              path="/shop/wishlist"
+              element={isAuthenticated ? <UserWishlist /> : <Navigate to="/login" />}
+            />
+            <Route
+              path="/shop/profile"
+              element={isAuthenticated ? <UserProfile /> : <Navigate to="/login" />}
+            />
+
             {/* Default routes */}
-            {/* <Route path="/" element={<Navigate to="/login" />} /> */}
-            <Route path="*" element={<Navigate to="/login" />} />
+            <Route path="/" element={<Navigate to={isAuthenticated ? (isAdmin ? '/products' : '/shop') : '/login'} replace />} />
+            <Route path="*" element={<Navigate to={isAuthenticated ? (isAdmin ? '/products' : '/shop') : '/login'} replace />} />
           </Routes>
         </div>
       </div>

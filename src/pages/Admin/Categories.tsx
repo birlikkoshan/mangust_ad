@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { categoriesAPI, Category } from "../../api/Admin/categories";
+import Pagination from "../../components/Admin/Pagination";
 
 const Categories = () => {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -8,21 +9,32 @@ const Categories = () => {
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({ name: "", description: "" });
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [totalItems, setTotalItems] = useState<number | undefined>(undefined);
 
   useEffect(() => {
     loadCategories();
-  }, []);
+  }, [page, limit]);
 
   const loadCategories = async () => {
     try {
       setLoading(true);
-      const data = await categoriesAPI.getAll();
-      setCategories(data);
+      const offset = (page - 1) * limit;
+      const result = await categoriesAPI.getAll({ offset, limit });
+      setCategories(result.items);
+      setTotalItems(result.total);
     } catch (err: any) {
       setError(err.response?.data?.message || "Failed to load categories");
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePageChange = (newPage: number) => setPage(newPage);
+  const handleLimitChange = (newLimit: number) => {
+    setLimit(newLimit);
+    setPage(1);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -151,6 +163,13 @@ const Categories = () => {
             ))}
           </tbody>
         </table>
+        <Pagination
+          page={page}
+          limit={limit}
+          totalItems={totalItems}
+          onPageChange={handlePageChange}
+          onLimitChange={handleLimitChange}
+        />
       </div>
     </div>
   );

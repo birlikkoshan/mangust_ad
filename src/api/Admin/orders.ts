@@ -82,15 +82,33 @@ function normalizeOrder(raw: any): Order {
   };
 }
 
+export interface PaginatedOrders {
+  items: Order[];
+  total?: number;
+}
+
+export interface FindOrdersParams {
+  orderId?: string;
+  userId?: string;
+  status?: string;
+  offset?: number;
+  limit?: number;
+}
+
 export const ordersAPI = {
-  getAll: async (): Promise<Order[]> => {
-    const response = await apiClient.get('/orders');
-    return response.data.map(normalizeOrder);
+  getAll: async (params?: { offset?: number; limit?: number }): Promise<PaginatedOrders> => {
+    const { offset = 0, limit = 10 } = params ?? {};
+    const response = await apiClient.get('/orders', { params: { offset, limit } });
+    const raw = response.data?.data ?? response.data;
+    const items = Array.isArray(raw) ? raw.map(normalizeOrder) : [];
+    const total = response.data?.total ?? (Array.isArray(response.data) ? undefined : response.data?.total);
+    return { items, total };
   },
 
   getById: async (id: string): Promise<Order> => {
     const response = await apiClient.get(`/orders/${id}`);
-    return normalizeOrder(response.data);
+    const raw = response.data?.data ?? response.data;
+    return normalizeOrder(raw);
   },
 
   create: async (data: CreateOrderData): Promise<Order> => {
@@ -101,6 +119,14 @@ export const ordersAPI = {
   updateStatus: async (id: string, data: UpdateOrderStatusData): Promise<Order> => {
     const response = await apiClient.put(`/admin/orders/${id}/status`, data);
     return normalizeOrder(response.data);
+  },
+
+  find: async (params: FindOrdersParams): Promise<PaginatedOrders> => {
+    const response = await apiClient.post('/admin/orders/find', params);
+    const raw = response.data?.data ?? response.data;
+    const items = Array.isArray(raw) ? raw.map(normalizeOrder) : [];
+    const total = response.data?.total;
+    return { items, total };
   },
 
   delete: async (id: string): Promise<void> => {

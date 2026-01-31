@@ -31,11 +31,19 @@ function extractArray(data: any): any[] {
   return [];
 }
 
+export interface PaginatedCategories {
+  items: Category[];
+  total?: number;
+}
+
 export const categoriesAPI = {
-  getAll: async (): Promise<Category[]> => {
-    const response = await apiClient.get("/categories");
+  getAll: async (params?: { offset?: number; limit?: number }): Promise<PaginatedCategories> => {
+    const { offset = 0, limit = 10 } = params ?? {};
+    const response = await apiClient.get("/categories", { params: { offset, limit } });
     const raw = extractArray(response.data);
-    return raw.map(normalizeCategory);
+    const items = raw.map(normalizeCategory);
+    const total = response.data?.total;
+    return { items, total };
   },
 
   getById: async (id: string): Promise<Category> => {
