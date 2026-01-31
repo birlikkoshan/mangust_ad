@@ -3,15 +3,11 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { ordersAPI } from '../../api/Admin/orders';
 import { productsAPI, Product } from '../../api/Admin/products';
 import { categoriesAPI, Category } from '../../api/Admin/categories';
-import { getAssetUrl } from '../../utils';
-
-const CATEGORY_COLORS = ['#EAEFEF', '#BFC9D1', '#25343F', '#FF9B51'];
-
-const getCategoryColor = (categoryId: string): string => {
-  let hash = 0;
-  for (let i = 0; i < categoryId.length; i++) hash = categoryId.charCodeAt(i) + ((hash << 5) - hash);
-  return CATEGORY_COLORS[Math.abs(hash) % CATEGORY_COLORS.length];
-};
+import ProductCard from '../../components/User/ProductCard';
+import ProductGrid from '../../components/ProductGrid';
+import PageLoading from '../../components/PageLoading';
+import ErrorAlert from '../../components/ErrorAlert';
+import { getCategoryForProduct } from '../../utils';
 
 interface CartItem {
   productId: string;
@@ -71,12 +67,6 @@ const CreateOrder = () => {
   };
 
   const categoriesMap = Object.fromEntries(categories.map((c) => [c.id, c]));
-
-  const getCategoryForProduct = (product: Product) => {
-    if (product.category?.name) return product.category;
-    const cat = categoriesMap[product.categoryId];
-    return cat ? { id: cat.id, name: cat.name, imageUrl: cat.imageUrl } : null;
-  };
 
   const addToCart = (product: Product, quantity: number) => {
     if (quantity < 1) return;
@@ -155,9 +145,7 @@ const CreateOrder = () => {
   if (loading) {
     return (
       <div className="user-page">
-        <div className="user-container" style={{ padding: '48px 20px', textAlign: 'center' }}>
-          <p style={{ color: 'var(--user-text-muted)' }}>Loading...</p>
-        </div>
+        <PageLoading />
       </div>
     );
   }
@@ -173,7 +161,7 @@ const CreateOrder = () => {
           ← Back to Orders
         </Link>
 
-        {error && <div className="user-alert-error">{error}</div>}
+        {error && <ErrorAlert message={error} />}
 
         <h1 style={{ marginBottom: '8px', color: 'var(--user-text)' }}>Create Order</h1>
         <p style={{ color: 'var(--user-text-muted)', marginBottom: '24px' }}>
@@ -184,68 +172,31 @@ const CreateOrder = () => {
           {/* Product list */}
           <div className="user-card">
             <h2 style={{ marginBottom: '20px', color: 'var(--user-text)', fontSize: '20px' }}>Products</h2>
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-                gap: '16px',
-              }}
-            >
-              {products.map((product) => {
-                const category = getCategoryForProduct(product);
-                const imageUrl = getAssetUrl(category?.imageUrl ?? product.category?.imageUrl);
-                const categoryName = category?.name || product.category?.name || 'Uncategorized';
-                const inCart = cart.find((i) => i.productId === product.id);
-                const qty = productQuantities[product.id] ?? 1;
-                const setQty = (n: number) =>
-                  setProductQuantities((prev) => ({ ...prev, [product.id]: Math.max(1, Math.min(product.stock, n)) }));
-                return (
-                  <div
-                    key={product.id}
-                    className="user-product-card create-order-product-card"
-                    style={{ margin: 0 }}
-                  >
-                    <div className="user-product-card-image" style={{ position: 'relative', overflow: 'hidden' }}>
-                      {imageUrl ? (
-                        <img
-                          src={imageUrl}
-                          alt={categoryName}
-                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).style.display = 'none';
-                            const fallback = (e.target as HTMLImageElement).nextElementSibling as HTMLElement;
-                            if (fallback) fallback.style.display = 'flex';
-                          }}
-                        />
-                      ) : null}
-                      <div
-                        className="user-card-image-fallback"
-                        style={{
-                          display: imageUrl ? 'none' : 'flex',
-                          position: imageUrl ? 'absolute' : 'relative',
-                          inset: 0,
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          background: getCategoryColor(product.categoryId || '') || 'var(--user-bg-alt)',
-                          color: getCategoryColor(product.categoryId || '') === '#25343F' ? 'white' : 'var(--user-text)',
-                          fontSize: '32px',
-                          fontWeight: 600,
-                        }}
-                      >
-                        {categoryName.charAt(0) || '?'}
-                      </div>
-                    </div>
-                    <div className="user-product-card-body" style={{ padding: '12px' }}>
-                      <div className="user-product-card-title" style={{ fontSize: '14px' }}>{product.name}</div>
-                      <div className="user-product-card-price" style={{ fontSize: '16px' }}>${product.price.toFixed(2)}</div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '10px' }}>
+            {products.length === 0 ? (
+              <p style={{ color: 'var(--user-text-muted)', padding: '20px 0' }}>No products available.</p>
+            ) : (
+              <ProductGrid>
+                {products.map((product) => {
+                  const category = getCategoryForProduct(product, categoriesMap);
+                  const inCart = cart.find((i) => i.productId === product.id);
+                  const qty = productQuantities[product.id] ?? 1;
+                  const setQty = (n: number) =>
+                    setProductQuantities((prev) => ({ ...prev, [product.id]: Math.max(1, Math.min(product.stock, n)) }));
+                  return (
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      category={category}
+                      to={`/shop/products/${product.id}`}
+                      compact
+                    >
+                      <div style={{ padding: '0 12px 12px', display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
                         <input
                           type="number"
                           min={1}
                           max={product.stock}
                           value={qty}
                           onChange={(e) => setQty(parseInt(e.target.value, 10) || 1)}
-                          className="create-order-qty-input"
                           style={{ width: '56px', padding: '6px 8px', borderRadius: '6px', border: '1px solid var(--user-border)' }}
                         />
                         <button
@@ -258,13 +209,10 @@ const CreateOrder = () => {
                           {inCart ? '+ Add more' : 'Add to order'}
                         </button>
                       </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            {products.length === 0 && (
-              <p style={{ color: 'var(--user-text-muted)', padding: '20px 0' }}>No products available.</p>
+                    </ProductCard>
+                  );
+                })}
+              </ProductGrid>
             )}
           </div>
 

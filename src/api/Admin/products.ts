@@ -40,12 +40,7 @@ export interface AddReviewData {
   comment: string;
 }
 
-// Helper to extract array from response (handles { data: [...] } vs [...])
-function extractArray(data: any): any[] {
-  if (Array.isArray(data)) return data;
-  if (data && Array.isArray(data.data)) return data.data;
-  return [];
-}
+import { extractPaginatedItems, extractTotal } from './paginatedResponse';
 
 // Helper to normalize review
 function normalizeReview(raw: any): Review {
@@ -103,9 +98,9 @@ export const productsAPI = {
     if (categoryId) params.categoryId = categoryId;
     const response = await apiClient.get('/products', { params });
     const data = response.data ?? {};
-    const raw = Array.isArray(data.items) ? data.items : extractArray(data);
+    const raw = extractPaginatedItems(data);
     const items = raw.map(normalizeProduct);
-    const total = data.total;
+    const total = extractTotal(data);
     return { items, total };
   },
 

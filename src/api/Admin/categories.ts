@@ -1,4 +1,5 @@
 import apiClient from "./client";
+import { extractPaginatedItems, extractTotal } from './paginatedResponse';
 
 export interface Category {
   id: string;
@@ -26,14 +27,6 @@ function normalizeCategory(raw: any): Category {
   };
 }
 
-// Helper to extract array from response (handles { data: [...] } vs { items: [...] } vs [...])
-function extractArray(data: any): any[] {
-  if (Array.isArray(data)) return data;
-  if (data && Array.isArray(data.data)) return data.data;
-  if (data && Array.isArray(data.items)) return data.items;
-  return [];
-}
-
 export interface PaginatedCategories {
   items: Category[];
   total?: number;
@@ -44,9 +37,9 @@ export const categoriesAPI = {
     const { offset = 0, limit = 10 } = params ?? {};
     const response = await apiClient.get("/categories", { params: { offset, limit } });
     const data = response.data ?? {};
-    const raw = Array.isArray(data.items) ? data.items : extractArray(data);
+    const raw = extractPaginatedItems(data);
     const items = raw.map(normalizeCategory);
-    const total = data.total ?? data.total_count;
+    const total = extractTotal(data);
     return { items, total };
   },
 
@@ -75,7 +68,3 @@ export const categoriesAPI = {
     await apiClient.delete(`/admin/categories/${id}`);
   },
 };
-
-
-
-

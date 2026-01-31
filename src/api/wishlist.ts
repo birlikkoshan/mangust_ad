@@ -1,4 +1,5 @@
 import apiClient from './Admin/client';
+import { extractPaginatedItems, extractTotal } from './Admin/paginatedResponse';
 
 export interface WishlistItem {
   id: string;
@@ -14,13 +15,6 @@ export interface WishlistItem {
   };
   userId?: string;
   createdAt?: string;
-}
-
-function extractArray(data: any): any[] {
-  if (Array.isArray(data)) return data;
-  if (data && Array.isArray(data.data)) return data.data;
-  if (data && Array.isArray(data.items)) return data.items;
-  return [];
 }
 
 function normalizeWishlistItem(raw: any): WishlistItem {
@@ -57,9 +51,9 @@ export const wishlistAPI = {
     const { offset = 0, limit = 10 } = params ?? {};
     const response = await apiClient.get('/wishlist', { params: { offset, limit } });
     const data = response.data ?? {};
-    const raw = Array.isArray(data.items) ? data.items : extractArray(data);
+    const raw = extractPaginatedItems(data);
     const items = raw.map(normalizeWishlistItem);
-    const total = data.total ?? data.total_count;
+    const total = extractTotal(data);
     return { items, total };
   },
 

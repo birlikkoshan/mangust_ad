@@ -1,4 +1,5 @@
 import apiClient from './client';
+import { extractPaginatedItems, extractTotal } from './paginatedResponse';
 
 export interface OrderItem {
   productId: string;
@@ -109,9 +110,9 @@ export const ordersAPI = {
     const { offset = 0, limit = 10 } = params ?? {};
     const response = await apiClient.get('/orders', { params: { offset, limit } });
     const data = response.data ?? {};
-    const raw = Array.isArray(data.items) ? data.items : (data.data ?? (Array.isArray(data) ? data : []));
-    const items = Array.isArray(raw) ? raw.map(normalizeOrder) : [];
-    const total = data.total;
+    const raw = extractPaginatedItems(data);
+    const items = (Array.isArray(raw) ? raw : []).map(normalizeOrder);
+    const total = extractTotal(data);
     return { items, total };
   },
 
@@ -134,9 +135,9 @@ export const ordersAPI = {
   find: async (params: FindOrdersParams): Promise<PaginatedOrders> => {
     const response = await apiClient.post('/admin/orders/find', params);
     const data = response.data ?? {};
-    const raw = Array.isArray(data.items) ? data.items : (data.data ?? (Array.isArray(data) ? data : []));
-    const items = Array.isArray(raw) ? raw.map(normalizeOrder) : [];
-    const total = data.total;
+    const raw = extractPaginatedItems(data);
+    const items = (Array.isArray(raw) ? raw : []).map(normalizeOrder);
+    const total = extractTotal(data);
     return { items, total };
   },
 

@@ -4,15 +4,10 @@ import { wishlistAPI, WishlistItem } from '../../api/wishlist';
 import { categoriesAPI } from '../../api/Admin/categories';
 import { productsAPI, Product } from '../../api/Admin/products';
 import Pagination from '../../components/Pagination';
-import { getAssetUrl } from '../../utils';
-
-const CATEGORY_COLORS = ['#EAEFEF', '#BFC9D1', '#25343F', '#FF9B51'];
-
-const getCategoryColor = (str: string): string => {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
-  return CATEGORY_COLORS[Math.abs(hash) % CATEGORY_COLORS.length];
-};
+import ProductGrid from '../../components/ProductGrid';
+import WishlistItemCard from '../../components/User/WishlistItemCard';
+import PageLoading from '../../components/PageLoading';
+import ErrorAlert from '../../components/ErrorAlert';
 
 const Wishlist = () => {
   const navigate = useNavigate();
@@ -68,10 +63,7 @@ const Wishlist = () => {
   };
 
   const handleCreateOrder = () => {
-    const preselectedItems = items.map((item) => ({
-      productId: item.productId,
-      quantity: 1,
-    }));
+    const preselectedItems = items.map((item) => ({ productId: item.productId, quantity: 1 }));
     navigate('/shop/orders/new', { state: { preselectedItems } });
   };
 
@@ -83,7 +75,7 @@ const Wishlist = () => {
 
   const categoriesMap = Object.fromEntries(categories.map((c) => [c.id, c]));
 
-  if (loading) return <div className="user-container" style={{ padding: '48px 20px', textAlign: 'center' }}>Loading...</div>;
+  if (loading) return <PageLoading />;
 
   return (
     <div className="user-page">
@@ -96,99 +88,25 @@ const Wishlist = () => {
             </button>
           )}
         </div>
-
-        {error && <div className="user-alert-error">{error}</div>}
-
+        {error && <ErrorAlert message={error} />}
         <div className="user-card">
           {items.length === 0 ? (
-            <p style={{ color: 'var(--user-text-muted)' }}>Your wishlist is empty. <Link to="/shop/catalog" style={{ color: 'var(--user-accent)' }}>Browse catalog</Link></p>
+            <p style={{ color: 'var(--user-text-muted)' }}>
+              Your wishlist is empty. <Link to="/shop/catalog" style={{ color: 'var(--user-accent)' }}>Browse catalog</Link>
+            </p>
           ) : (
             <>
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
-                  gap: '24px',
-                }}
-              >
-                {items.map((item) => {
-                  const product = productMap[item.productId] ?? item.product;
-                  const categoryId = product?.categoryId ?? (product as Product & { category_id?: string })?.category_id;
-                  const cat = categoryId ? categoriesMap[categoryId] : product?.category ? { name: product.category.name ?? '', imageUrl: product.category.imageUrl } : null;
-                  const categoryImageUrl = getAssetUrl(cat?.imageUrl);
-                  const categoryName = cat?.name ?? 'Uncategorized';
-                  const productName = product?.name ?? item.product?.name ?? item.productId;
-                  const productPrice = product?.price ?? item.product?.price;
-                  return (
-                    <div key={item.id} className="user-product-card">
-                      <Link
-                        to={`/shop/products/${item.productId}`}
-                        style={{ textDecoration: 'none', color: 'inherit' }}
-                      >
-                        <div className="user-product-card-image" style={{ position: 'relative', overflow: 'hidden' }}>
-                          {categoryImageUrl ? (
-                            <img
-                              src={categoryImageUrl}
-                              alt={categoryName || productName}
-                              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).style.display = 'none';
-                                const fallback = (e.target as HTMLImageElement).nextElementSibling as HTMLElement;
-                                if (fallback) fallback.style.display = 'flex';
-                              }}
-                            />
-                          ) : null}
-                          <div
-                            style={{
-                              display: categoryImageUrl ? 'none' : 'flex',
-                              position: 'absolute',
-                              inset: 0,
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              background: getCategoryColor(categoryId ?? item.productId),
-                              color: getCategoryColor(categoryId ?? item.productId) === '#25343F' ? 'white' : 'var(--user-text)',
-                              fontSize: '48px',
-                              fontWeight: 600,
-                            }}
-                          >
-                            {(categoryName || productName).charAt(0) || '?'}
-                          </div>
-                        </div>
-                        <div className="user-product-card-body">
-                          <div className="user-product-card-title">{productName}</div>
-                          <div className="user-product-card-price">
-                            {productPrice != null ? `$${Number(productPrice).toFixed(2)}` : 'N/A'}
-                          </div>
-                        </div>
-                      </Link>
-                      <div style={{ padding: '0 16px 16px', display: 'flex', gap: '8px' }}>
-                        <Link
-                          to={`/shop/products/${item.productId}`}
-                          className="user-btn user-btn-primary"
-                          style={{ flex: 1, textAlign: 'center', textDecoration: 'none', padding: '8px' }}
-                        >
-                          View
-                        </Link>
-                        <Link
-                          to="/shop/orders/new"
-                          state={{ preselectedItems: [{ productId: item.productId, quantity: 1 }] }}
-                          className="user-btn user-btn-outline"
-                          style={{ flex: 1, textAlign: 'center', textDecoration: 'none', padding: '8px' }}
-                        >
-                          Buy Now
-                        </Link>
-                        <button
-                          className="user-btn user-btn-outline"
-                          onClick={() => handleRemove(item.id)}
-                          style={{ padding: '8px' }}
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+              <ProductGrid>
+                {items.map((item) => (
+                  <WishlistItemCard
+                    key={item.id}
+                    item={item}
+                    product={productMap[item.productId] ?? item.product}
+                    categoriesMap={categoriesMap}
+                    onRemove={handleRemove}
+                  />
+                ))}
+              </ProductGrid>
               <Pagination
                 page={page}
                 limit={limit}
