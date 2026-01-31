@@ -106,7 +106,8 @@ export const productsAPI = {
 
   getById: async (id: string): Promise<Product> => {
     const response = await apiClient.get(`/products/${id}`);
-    return normalizeProduct(response.data);
+    const raw = response.data?.data ?? response.data;
+    return normalizeProduct(raw);
   },
 
   create: async (data: CreateProductData): Promise<Product> => {
@@ -124,7 +125,12 @@ export const productsAPI = {
   },
 
   addReview: async (id: string, data: AddReviewData): Promise<Product> => {
-    const response = await apiClient.post(`/admin/products/${id}/reviews`, data);
-    return normalizeProduct(response.data);
+    const response = await apiClient.post(`/products/${id}/reviews`, data);
+    const raw = response.data?.data ?? response.data;
+    return normalizeProduct(raw);
+  },
+
+  deleteReview: async (productId: string, reviewId: string): Promise<void> => {
+    await apiClient.delete(`/products/${productId}/reviews/${reviewId}`);
   },
 };

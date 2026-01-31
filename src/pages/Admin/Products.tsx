@@ -188,7 +188,7 @@ const Products = () => {
                 <td>
                   <Link to={`/products/${product.id}`}>{product.name}</Link>
                 </td>
-                <td>{product.category?.name || 'N/A'}</td>
+                <td>{categories.find(cat => cat.id === product.categoryId)?.name || 'N/A'}</td>
                 <td>${product.price.toFixed(2)}</td>
                 <td>{product.stock}</td>
                 <td>{product.reviews.length}</td>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { ordersAPI, Order } from '../../api/Admin/orders';
+import { Link } from 'react-router-dom';
+import { ordersAPI, Order, FindOrdersParams } from '../../api/Admin/orders';
 import { productsAPI, Product } from '../../api/Admin/products';
 import Pagination from '../../components/Admin/Pagination';
 
@@ -13,19 +14,28 @@ const Orders = () => {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [totalItems, setTotalItems] = useState<number | undefined>(undefined);
+  const [findMode, setFindMode] = useState(false);
+  const [findOrderId, setFindOrderId] = useState('');
+  const [findStatus, setFindStatus] = useState('');
 
   useEffect(() => {
     loadData();
   }, [page, limit]);
 
-  const loadData = async () => {
+  const loadData = async (forceGetAll = false) => {
     try {
       setLoading(true);
       const offset = (page - 1) * limit;
-      const [ordersResult, productsResult] = await Promise.all([
-        ordersAPI.getAll({ offset, limit }),
-        productsAPI.getAll(undefined, { offset: 0, limit: 500 }),
-      ]);
+      let ordersResult;
+      if (!forceGetAll && findMode && (findOrderId.trim() || findStatus)) {
+        const params: FindOrdersParams = { offset, limit };
+        if (findOrderId.trim()) params.orderId = findOrderId.trim();
+        if (findStatus) params.status = findStatus;
+        ordersResult = await ordersAPI.find(params);
+      } else {
+        ordersResult = await ordersAPI.getAll({ offset, limit });
+      }
+      const productsResult = await productsAPI.getAll(undefined, { offset: 0, limit: 500 });
       setOrders(ordersResult.items);
       setTotalItems(ordersResult.total);
       setProducts(productsResult.items);
@@ -77,14 +87,9 @@ const Orders = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this order?')) return;
-    try {
-      await ordersAPI.delete(id);
-      loadData();
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to delete order');
-    }
+  const handleFind = () => {
+    setPage(1);
+    loadData();
   };
 
   if (loading) return <div>Loading...</div>;
@@ -99,6 +104,58 @@ const Orders = () => {
       </div>
 
       {error && <div className="alert alert-error">{error}</div>}
+
+      <div className="card" style={{ marginBottom: '20px' }}>
+        <h3>Find Orders</h3>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <label>
+            Order ID:
+            <input
+              type="text"
+              value={findOrderId}
+              onChange={(e) => setFindOrderId(e.target.value)}
+              placeholder="Order ID"
+              style={{ marginLeft: '8px', padding: '6px 10px', width: '200px' }}
+            />
+          </label>
+          <label>
+            Status:
+            <select
+              value={findStatus}
+              onChange={(e) => setFindStatus(e.target.value)}
+              style={{ marginLeft: '8px', padding: '6px 10px' }}
+            >
+              <option value="">All</option>
+              <option value="pending">Pending</option>
+              <option value="processing">Processing</option>
+              <option value="shipped">Shipped</option>
+              <option value="delivered">Delivered</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </label>
+          <button
+            type="button"
+            className={`btn ${findMode ? 'btn-primary' : ''}`}
+            onClick={() => {
+              const next = !findMode;
+              setFindMode(next);
+              if (!next) {
+                setFindOrderId('');
+                setFindStatus('');
+                setPage(1);
+                loadData(true);
+              }
+            }}
+          >
+            {findMode ? 'Using filters' : 'Filter'}
+          </button>
+          {findMode && (
+            <button type="button" className="btn btn-success" onClick={handleFind}>
+              Search
+            </button>
+          )}
+        </div>
+      </div>
 
       {showForm && (
         <div className="card">
@@ -159,7 +216,9 @@ const Orders = () => {
           <tbody>
             {orders?.map((order) => (
               <tr key={order.id}>
-                <td>{order.id.substring(0, 8)}...</td>
+                <td>
+                  <Link to={`/orders/${order.id}`}>{order.id.substring(0, 8)}...</Link>
+                </td>
                 <td>{order.user?.name || order.userId}</td>
                 <td>{order.items.length} item(s)</td>
                 <td>${order.total.toFixed(2)}</td>
@@ -177,12 +236,9 @@ const Orders = () => {
                 </td>
                 <td>{new Date(order.createdAt).toLocaleDateString()}</td>
                 <td>
-                  <button
-                    className="btn btn-danger"
-                    onClick={() => handleDelete(order.id)}
-                  >
-                    Delete
-                  </button>
+                  <Link to={`/orders/${order.id}`} className="btn btn-primary">
+                    View
+                  </Link>
                 </td>
               </tr>
             ))}

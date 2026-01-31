@@ -50,15 +50,29 @@ function normalizeProductStats(raw: any): ProductStats {
   };
 }
 
+export interface StatsFilters {
+  year?: number;
+  start?: string;
+  end?: string;
+}
+
 export const statsAPI = {
-  getSalesStats: async (): Promise<SalesStats> => {
-    const response = await apiClient.get('/admin/stats/sales');
+  getSalesStats: async (filters?: StatsFilters): Promise<SalesStats> => {
+    const params: Record<string, number | string> = {};
+    if (filters?.year != null) params.year = filters.year;
+    if (filters?.start) params.start = filters.start;
+    if (filters?.end) params.end = filters.end;
+    const response = await apiClient.get('/admin/stats/sales', { params });
     const raw = extractData(response.data);
     return normalizeSalesStats(raw);
   },
 
-  getProductStats: async (): Promise<ProductStats> => {
-    const response = await apiClient.get('/admin/stats/products');
+  getProductStats: async (filters?: StatsFilters): Promise<ProductStats> => {
+    const params: Record<string, number | string> = {};
+    if (filters?.year != null) params.year = filters.year;
+    if (filters?.start) params.start = filters.start;
+    if (filters?.end) params.end = filters.end;
+    const response = await apiClient.get('/admin/stats/products', { params });
     const raw = extractData(response.data);
     return normalizeProductStats(raw);
   },
