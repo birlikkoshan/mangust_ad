@@ -23,19 +23,27 @@ const Stats = () => {
   const [year, setYear] = useState<string>('');
   const [start, setStart] = useState<string>('');
   const [end, setEnd] = useState<string>('');
+  const [appliedYear, setAppliedYear] = useState<string>('');
+  const [appliedStart, setAppliedStart] = useState<string>('');
+  const [appliedEnd, setAppliedEnd] = useState<string>('');
 
   useEffect(() => {
     loadStats();
-  }, [activeTab, year, start, end]);
+  }, [activeTab, appliedYear, appliedStart, appliedEnd]);
 
-  const filters: StatsFilters = {};
-  if (year) filters.year = parseInt(year, 10);
-  if (start) filters.start = start;
-  if (end) filters.end = end;
+  const buildFilters = (): StatsFilters => {
+    const filters: StatsFilters = {};
+    if (appliedYear) filters.year = parseInt(appliedYear, 10);
+    if (appliedStart) filters.start = appliedStart;
+    if (appliedEnd) filters.end = appliedEnd;
+    return filters;
+  };
 
   const loadStats = async () => {
     try {
       setLoading(true);
+      setError('');
+      const filters = buildFilters();
       if (activeTab === 'sales') {
         const data = await statsAPI.getSalesStats(filters);
         setSalesStats(data);
@@ -48,6 +56,12 @@ const Stats = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleApplyFilters = () => {
+    setAppliedYear(year);
+    setAppliedStart(start);
+    setAppliedEnd(end);
   };
 
   const formatCurrency = (value: number) => {
@@ -114,6 +128,13 @@ const Stats = () => {
               style={{ marginLeft: '8px', padding: '6px 10px' }}
             />
           </label>
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={handleApplyFilters}
+          >
+            Apply
+          </button>
         </div>
       </div>
 

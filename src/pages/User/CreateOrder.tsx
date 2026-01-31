@@ -1,34 +1,68 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { ordersAPI } from '../../api/Admin/orders';
 import { productsAPI, Product } from '../../api/Admin/products';
+import { categoriesAPI, Category } from '../../api/Admin/categories';
+import { getAssetUrl } from '../../utils';
 
-interface PreselectedItem {
+const CATEGORY_COLORS = ['#EAEFEF', '#BFC9D1', '#25343F', '#FF9B51'];
+
+const getCategoryColor = (categoryId: string): string => {
+  let hash = 0;
+  for (let i = 0; i < categoryId.length; i++) hash = categoryId.charCodeAt(i) + ((hash << 5) - hash);
+  return CATEGORY_COLORS[Math.abs(hash) % CATEGORY_COLORS.length];
+};
+
+interface CartItem {
   productId: string;
   quantity: number;
+  product?: Product;
 }
 
 const CreateOrder = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const preselected = (location.state as { preselectedItems?: PreselectedItem[] })?.preselectedItems;
+  const preselected = (location.state as { preselectedItems?: { productId: string; quantity: number }[] })?.preselectedItems;
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [orderItems, setOrderItems] = useState<{ productId: string; quantity: number }[]>(
-    preselected && preselected.length > 0 ? preselected : []
+  const [cart, setCart] = useState<CartItem[]>(() =>
+    (preselected ?? []).map((item) => ({ productId: item.productId, quantity: item.quantity }))
   );
+  const [paymentCard, setPaymentCard] = useState('');
+  const [paymentExpiry, setPaymentExpiry] = useState('');
+  const [paymentCvv, setPaymentCvv] = useState('');
+  const [paymentName, setPaymentName] = useState('');
+  const [productQuantities, setProductQuantities] = useState<Record<string, number>>({});
+  const cartHydratedRef = useRef(false);
 
   useEffect(() => {
-    loadProducts();
+    loadData();
   }, []);
 
-  const loadProducts = async () => {
+  useEffect(() => {
+    if (cartHydratedRef.current || products.length === 0) return;
+    cartHydratedRef.current = true;
+    setCart((prev) => {
+      if (prev.length === 0) return prev;
+      return prev.map((item) => {
+        const product = products.find((p) => p.id === item.productId);
+        return product ? { ...item, product } : item;
+      });
+    });
+  }, [products]);
+
+  const loadData = async () => {
     try {
       setLoading(true);
-      const result = await productsAPI.getAll(undefined, { offset: 0, limit: 500 });
-      setProducts(result.items);
+      const [productsResult, categoriesResult] = await Promise.all([
+        productsAPI.getAll(undefined, { offset: 0, limit: 500 }),
+        categoriesAPI.getAll({ offset: 0, limit: 100 }),
+      ]);
+      setProducts(productsResult.items);
+      setCategories(categoriesResult.items);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to load products');
     } finally {
@@ -36,27 +70,69 @@ const CreateOrder = () => {
     }
   };
 
-  const handleAddItem = () => {
-    setOrderItems([...orderItems, { productId: '', quantity: 1 }]);
+  const categoriesMap = Object.fromEntries(categories.map((c) => [c.id, c]));
+
+  const getCategoryForProduct = (product: Product) => {
+    if (product.category?.name) return product.category;
+    const cat = categoriesMap[product.categoryId];
+    return cat ? { id: cat.id, name: cat.name, imageUrl: cat.imageUrl } : null;
   };
 
-  const handleItemChange = (index: number, field: string, value: string | number) => {
-    const updated = [...orderItems];
-    updated[index] = { ...updated[index], [field]: value };
-    setOrderItems(updated);
+  const addToCart = (product: Product, quantity: number) => {
+    if (quantity < 1) return;
+    setCart((prev) => {
+      const existing = prev.find((i) => i.productId === product.id);
+      if (existing) {
+        return prev.map((i) =>
+          i.productId === product.id ? { ...i, quantity: i.quantity + quantity, product } : i
+        );
+      }
+      return [...prev, { productId: product.id, quantity, product }];
+    });
   };
 
-  const handleRemoveItem = (index: number) => {
-    setOrderItems(orderItems.filter((_, i) => i !== index));
+  const updateCartQuantity = (productId: string, delta: number) => {
+    setCart((prev) =>
+      prev
+        .map((i) =>
+          i.productId === productId ? { ...i, quantity: Math.max(0, i.quantity + delta) } : i
+        )
+        .filter((i) => i.quantity > 0)
+    );
+  };
+
+  const removeFromCart = (productId: string) => {
+    setCart((prev) => prev.filter((i) => i.productId !== productId));
+  };
+
+  const cartWithProducts = cart.map((item) => ({
+    ...item,
+    product: item.product ?? products.find((p) => p.id === item.productId),
+  }));
+
+  const subtotal = cartWithProducts.reduce(
+    (sum, item) => sum + (item.product?.price ?? 0) * item.quantity,
+    0
+  );
+
+  const isPaymentValid = () => {
+    const card = paymentCard.replace(/\s/g, '');
+    if (card.length < 13) return false;
+    if (!paymentExpiry.match(/^\d{2}\/\d{2}$/)) return false;
+    if (paymentCvv.length < 3) return false;
+    if (!paymentName.trim()) return false;
+    return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (cart.length === 0) return;
     try {
       setSubmitting(true);
       setError('');
-      const order = await ordersAPI.create({ items: orderItems });
-      setOrderItems([]);
+      const order = await ordersAPI.create({
+        items: cart.map(({ productId, quantity }) => ({ productId, quantity })),
+      });
       navigate(`/shop/orders/${order.id}`);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to create order');
@@ -65,73 +141,256 @@ const CreateOrder = () => {
     }
   };
 
-  if (loading) return <div className="user-container" style={{ padding: '48px 20px', textAlign: 'center' }}>Loading...</div>;
+  const formatCardNumber = (value: string) => {
+    const v = value.replace(/\D/g, '').slice(0, 16);
+    return v.replace(/(.{4})/g, '$1 ').trim();
+  };
+
+  const formatExpiry = (value: string) => {
+    const v = value.replace(/\D/g, '').slice(0, 4);
+    if (v.length >= 2) return v.slice(0, 2) + '/' + v.slice(2);
+    return v;
+  };
+
+  if (loading) {
+    return (
+      <div className="user-page">
+        <div className="user-container" style={{ padding: '48px 20px', textAlign: 'center' }}>
+          <p style={{ color: 'var(--user-text-muted)' }}>Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="user-page">
       <div className="user-container">
-        <Link to="/shop/orders" className="user-btn user-btn-outline" style={{ marginBottom: '24px', display: 'inline-block', textDecoration: 'none' }}>
+        <Link
+          to="/shop/orders"
+          className="user-btn user-btn-outline"
+          style={{ marginBottom: '24px', display: 'inline-flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}
+        >
           ← Back to Orders
         </Link>
 
         {error && <div className="user-alert-error">{error}</div>}
 
-        <div className="user-card">
-        <h2>Create Order</h2>
-        <form onSubmit={handleSubmit}>
-          {orderItems.map((item, index) => (
+        <h1 style={{ marginBottom: '8px', color: 'var(--user-text)' }}>Create Order</h1>
+        <p style={{ color: 'var(--user-text-muted)', marginBottom: '24px' }}>
+          Add products from the list below, then enter payment details.
+        </p>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '24px', alignItems: 'start' }} className="create-order-layout">
+          {/* Product list */}
+          <div className="user-card">
+            <h2 style={{ marginBottom: '20px', color: 'var(--user-text)', fontSize: '20px' }}>Products</h2>
             <div
-              key={index}
-              style={{ display: 'flex', gap: '10px', marginBottom: '10px', alignItems: 'center' }}
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                gap: '16px',
+              }}
             >
-              <select
-                value={item.productId}
-                onChange={(e) => handleItemChange(index, 'productId', e.target.value)}
-                required
-                className="user-filter-select"
-                style={{ flex: 2 }}
-              >
-                <option value="">Select Product</option>
-                {products.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name} - ${p.price.toFixed(2)} (Stock: {p.stock})
-                  </option>
-                ))}
-              </select>
-              <input
-                type="number"
-                min="1"
-                value={item.quantity}
-                onChange={(e) => handleItemChange(index, 'quantity', parseInt(e.target.value) || 1)}
-                required
-                style={{ flex: 1 }}
-              />
-              <button
-                type="button"
-                className="btn btn-danger"
-                onClick={() => handleRemoveItem(index)}
-              >
-                Remove
-              </button>
+              {products.map((product) => {
+                const category = getCategoryForProduct(product);
+                const imageUrl = getAssetUrl(category?.imageUrl ?? product.category?.imageUrl);
+                const categoryName = category?.name || product.category?.name || 'Uncategorized';
+                const inCart = cart.find((i) => i.productId === product.id);
+                const qty = productQuantities[product.id] ?? 1;
+                const setQty = (n: number) =>
+                  setProductQuantities((prev) => ({ ...prev, [product.id]: Math.max(1, Math.min(product.stock, n)) }));
+                return (
+                  <div
+                    key={product.id}
+                    className="user-product-card create-order-product-card"
+                    style={{ margin: 0 }}
+                  >
+                    <div className="user-product-card-image" style={{ position: 'relative', overflow: 'hidden' }}>
+                      {imageUrl ? (
+                        <img
+                          src={imageUrl}
+                          alt={categoryName}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                            const fallback = (e.target as HTMLImageElement).nextElementSibling as HTMLElement;
+                            if (fallback) fallback.style.display = 'flex';
+                          }}
+                        />
+                      ) : null}
+                      <div
+                        className="user-card-image-fallback"
+                        style={{
+                          display: imageUrl ? 'none' : 'flex',
+                          position: imageUrl ? 'absolute' : 'relative',
+                          inset: 0,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          background: getCategoryColor(product.categoryId || '') || 'var(--user-bg-alt)',
+                          color: getCategoryColor(product.categoryId || '') === '#25343F' ? 'white' : 'var(--user-text)',
+                          fontSize: '32px',
+                          fontWeight: 600,
+                        }}
+                      >
+                        {categoryName.charAt(0) || '?'}
+                      </div>
+                    </div>
+                    <div className="user-product-card-body" style={{ padding: '12px' }}>
+                      <div className="user-product-card-title" style={{ fontSize: '14px' }}>{product.name}</div>
+                      <div className="user-product-card-price" style={{ fontSize: '16px' }}>${product.price.toFixed(2)}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '10px' }}>
+                        <input
+                          type="number"
+                          min={1}
+                          max={product.stock}
+                          value={qty}
+                          onChange={(e) => setQty(parseInt(e.target.value, 10) || 1)}
+                          className="create-order-qty-input"
+                          style={{ width: '56px', padding: '6px 8px', borderRadius: '6px', border: '1px solid var(--user-border)' }}
+                        />
+                        <button
+                          type="button"
+                          className="user-btn user-btn-primary"
+                          style={{ flex: 1, padding: '8px 12px', fontSize: '13px' }}
+                          onClick={() => addToCart(product, qty)}
+                          disabled={product.stock < 1}
+                        >
+                          {inCart ? '+ Add more' : 'Add to order'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          ))}
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={handleAddItem}
-            style={{ marginBottom: '10px' }}
-          >
-            Add Item
-          </button>
-          <br />
-          <button
-            type="submit"
-            className="btn btn-success"
-            disabled={orderItems.length === 0 || submitting}
-          >
-            {submitting ? 'Creating...' : 'Create Order'}
-          </button>
-        </form>
+            {products.length === 0 && (
+              <p style={{ color: 'var(--user-text-muted)', padding: '20px 0' }}>No products available.</p>
+            )}
+          </div>
+
+          {/* Cart + Payment sidebar */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            {/* Cart summary */}
+            <div className="user-card">
+              <h2 style={{ marginBottom: '16px', color: 'var(--user-text)', fontSize: '18px' }}>Your order</h2>
+              {cartWithProducts.length === 0 ? (
+                <p style={{ color: 'var(--user-text-muted)', fontSize: '14px' }}>Cart is empty. Add products from the list.</p>
+              ) : (
+                <>
+                  <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                    {cartWithProducts.map((item) => (
+                      <li
+                        key={item.productId}
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          padding: '10px 0',
+                          borderBottom: '1px solid var(--user-bg-alt)',
+                        }}
+                      >
+                        <div>
+                          <span style={{ fontWeight: 500 }}>{item.product?.name ?? 'Product'}</span>
+                          <span style={{ color: 'var(--user-text-muted)', marginLeft: '8px', fontSize: '14px' }}>
+                            ×{item.quantity} · ${(item.product?.price ?? 0).toFixed(2)} each
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ fontWeight: 600, color: 'var(--user-accent)' }}>
+                            ${((item.product?.price ?? 0) * item.quantity).toFixed(2)}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => updateCartQuantity(item.productId, -1)}
+                            style={{ padding: '4px 8px', fontSize: '12px', border: 'none', background: 'var(--user-bg-alt)', borderRadius: '6px', cursor: 'pointer' }}
+                          >
+                            −
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => updateCartQuantity(item.productId, 1)}
+                            style={{ padding: '4px 8px', fontSize: '12px', border: 'none', background: 'var(--user-bg-alt)', borderRadius: '6px', cursor: 'pointer' }}
+                          >
+                            +
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => removeFromCart(item.productId)}
+                            style={{ padding: '4px 8px', fontSize: '12px', color: '#b91c1c', border: 'none', background: 'transparent', cursor: 'pointer' }}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                  <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '2px solid var(--user-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontWeight: 600, color: 'var(--user-text)' }}>Subtotal</span>
+                    <span style={{ fontWeight: 700, fontSize: '18px', color: 'var(--user-accent)' }}>${subtotal.toFixed(2)}</span>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Payment info */}
+            <div className="user-card">
+              <h2 style={{ marginBottom: '16px', color: 'var(--user-text)', fontSize: '18px' }}>Payment</h2>
+              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '14px' }}>
+                  <span style={{ color: 'var(--user-text-muted)' }}>Card number</span>
+                  <input
+                    type="text"
+                    placeholder="1234 5678 9012 3456"
+                    value={paymentCard}
+                    onChange={(e) => setPaymentCard(formatCardNumber(e.target.value))}
+                    maxLength={19}
+                    className="user-filter-select"
+                  />
+                </label>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '14px', flex: 1 }}>
+                    <span style={{ color: 'var(--user-text-muted)' }}>Expiry (MM/YY)</span>
+                    <input
+                      type="text"
+                      placeholder="MM/YY"
+                      value={paymentExpiry}
+                      onChange={(e) => setPaymentExpiry(formatExpiry(e.target.value))}
+                      maxLength={5}
+                      className="user-filter-select"
+                    />
+                  </label>
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '14px', flex: 1 }}>
+                    <span style={{ color: 'var(--user-text-muted)' }}>CVV</span>
+                    <input
+                      type="text"
+                      placeholder="123"
+                      value={paymentCvv}
+                      onChange={(e) => setPaymentCvv(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                      className="user-filter-select"
+                    />
+                  </label>
+                </div>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '14px' }}>
+                  <span style={{ color: 'var(--user-text-muted)' }}>Name on card</span>
+                  <input
+                    type="text"
+                    placeholder="John Doe"
+                    value={paymentName}
+                    onChange={(e) => setPaymentName(e.target.value)}
+                    className="user-filter-select"
+                  />
+                </label>
+                <button
+                  type="submit"
+                  className="user-btn user-btn-primary"
+                  disabled={cart.length === 0 || submitting || !isPaymentValid()}
+                  style={{ marginTop: '8px', padding: '12px 20px' }}
+                >
+                  {submitting ? 'Placing order...' : `Place order · $${subtotal.toFixed(2)}`}
+                </button>
+              </form>
+            </div>
+          </div>
         </div>
       </div>
     </div>

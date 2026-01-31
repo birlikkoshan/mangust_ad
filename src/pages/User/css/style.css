@@ -255,6 +255,27 @@
   }
 }
 
+.create-order-layout {
+  grid-template-columns: 1fr 380px;
+}
+@media (max-width: 900px) {
+  .create-order-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.user-navbar .nav-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+.user-navbar a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .user-profile-photo-skeleton {
   width: 120px;
   height: 120px;

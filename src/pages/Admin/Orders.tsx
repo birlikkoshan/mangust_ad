@@ -217,7 +217,7 @@ const Orders = () => {
             {orders?.map((order) => (
               <tr key={order.id}>
                 <td>
-                  <Link to={`/orders/${order.id}`}>{order.id.substring(0, 8)}...</Link>
+                  <Link to={`/admin/orders/${order.id}`}>{order.id.substring(0, 8)}...</Link>
                 </td>
                 <td>{order.user?.name || order.userId}</td>
                 <td>{order.items.length} item(s)</td>
@@ -236,7 +236,7 @@ const Orders = () => {
                 </td>
                 <td>{new Date(order.createdAt).toLocaleDateString()}</td>
                 <td>
-                  <Link to={`/orders/${order.id}`} className="btn btn-primary">
+                  <Link to={`/admin/orders/${order.id}`} className="btn btn-primary">
                     View
                   </Link>
                 </td>

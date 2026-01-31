@@ -107,8 +107,8 @@ export const ordersAPI = {
 
   getById: async (id: string): Promise<Order> => {
     const response = await apiClient.get(`/orders/${id}`);
-    const raw = response.data?.data ?? response.data;
-    return normalizeOrder(raw);
+    const raw = response.data?.data ?? response.data?.order ?? response.data;
+    return normalizeOrder(raw ?? {});
   },
 
   create: async (data: CreateOrderData): Promise<Order> => {

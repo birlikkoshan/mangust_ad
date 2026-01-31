@@ -11,6 +11,7 @@ const Products = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [totalItems, setTotalItems] = useState<number | undefined>(undefined);
@@ -53,20 +54,44 @@ const Products = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await productsAPI.create({
+      const productData = {
         name: formData.name,
         description: formData.description,
         price: parseFloat(formData.price),
         stock: parseInt(formData.stock),
         categoryId: formData.categoryId,
-      });
+      };
+      if (editingProduct) {
+        await productsAPI.update(editingProduct.id, productData);
+      } else {
+        await productsAPI.create(productData);
+        setPage(1);
+      }
       setShowForm(false);
+      setEditingProduct(null);
       setFormData({ name: '', description: '', price: '', stock: '', categoryId: '' });
-      setPage(1);
       loadData();
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to create product');
+      setError(err.response?.data?.message || (editingProduct ? 'Failed to update product' : 'Failed to create product'));
     }
+  };
+
+  const handleEdit = (product: Product) => {
+    setEditingProduct(product);
+    setFormData({
+      name: product.name,
+      description: product.description,
+      price: product.price.toString(),
+      stock: product.stock.toString(),
+      categoryId: product.categoryId,
+    });
+    setShowForm(true);
+  };
+
+  const handleCancelForm = () => {
+    setShowForm(false);
+    setEditingProduct(null);
+    setFormData({ name: '', description: '', price: '', stock: '', categoryId: '' });
   };
 
   const handleDelete = async (id: string) => {
@@ -85,7 +110,7 @@ const Products = () => {
     <div>
       <div className="card">
         <h1>Products</h1>
-        <button className="btn btn-primary" onClick={() => setShowForm(!showForm)}>
+        <button className="btn btn-primary" onClick={showForm ? handleCancelForm : () => setShowForm(true)}>
           {showForm ? 'Cancel' : 'Add Product'}
         </button>
       </div>
@@ -113,7 +138,7 @@ const Products = () => {
 
       {showForm && (
         <div className="card">
-          <h3>Create Product</h3>
+          <h3>{editingProduct ? 'Edit Product' : 'Create Product'}</h3>
           <form onSubmit={handleSubmit}>
             <div className="form-group">
               <label>Name</label>
@@ -165,7 +190,7 @@ const Products = () => {
                 ))}
               </select>
             </div>
-            <button type="submit" className="btn btn-primary">Create</button>
+            <button type="submit" className="btn btn-primary">{editingProduct ? 'Update' : 'Create'}</button>
           </form>
         </div>
       )}
@@ -186,13 +211,19 @@ const Products = () => {
             {products?.map((product) => (
               <tr key={product.id}>
                 <td>
-                  <Link to={`/products/${product.id}`}>{product.name}</Link>
+                  <Link to={`/admin/products/${product.id}`}>{product.name}</Link>
                 </td>
                 <td>{categories.find(cat => cat.id === product.categoryId)?.name || 'N/A'}</td>
                 <td>${product.price.toFixed(2)}</td>
                 <td>{product.stock}</td>
                 <td>{product.reviews.length}</td>
                 <td>
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => handleEdit(product)}
+                  >
+                    Edit
+                  </button>
                   <button
                     className="btn btn-danger"
                     onClick={() => handleDelete(product.id)}

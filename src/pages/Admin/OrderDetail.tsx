@@ -43,7 +43,7 @@ const OrderDetail = () => {
     <div>
       <button
         className="btn btn-primary"
-        onClick={() => navigate('/orders')}
+        onClick={() => navigate('/admin/orders')}
         style={{ marginBottom: '20px' }}
       >
         ← Back to Orders
@@ -52,7 +52,7 @@ const OrderDetail = () => {
       {error && <div className="alert alert-error">{error}</div>}
 
       <div className="card">
-        <h1>Order #{order.id.substring(0, 8)}...</h1>
+        <h1>Order #{(order.id || id || '').substring(0, 8)}...</h1>
         <p>
           <strong>User:</strong> {order.user?.name || order.user?.email || order.userId}
         </p>
@@ -86,7 +86,7 @@ const OrderDetail = () => {
             </tr>
           </thead>
           <tbody>
-            {order.items.map((item, idx) => (
+            {(order.items ?? []).map((item, idx) => (
               <tr key={idx}>
                 <td>{item.product?.name || item.productId}</td>
                 <td>{item.quantity}</td>
