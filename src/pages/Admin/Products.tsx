@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { productsAPI, Product } from '../../api/Admin/products';
 import { categoriesAPI, Category } from '../../api/Admin/categories';
+import Pagination from '../../components/Admin/Pagination';
+
 const Products = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -9,6 +11,9 @@ const Products = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [totalItems, setTotalItems] = useState<number | undefined>(undefined);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -19,22 +24,30 @@ const Products = () => {
 
   useEffect(() => {
     loadData();
-  }, [selectedCategory]);
+  }, [selectedCategory, page, limit]);
 
   const loadData = async () => {
     try {
       setLoading(true);
-      const [productsData, categoriesData] = await Promise.all([
-        productsAPI.getAll(selectedCategory || undefined),
-        categoriesAPI.getAll(),
+      const offset = (page - 1) * limit;
+      const [productsResult, categoriesResult] = await Promise.all([
+        productsAPI.getAll(selectedCategory || undefined, { offset, limit }),
+        categoriesAPI.getAll({ offset: 0, limit: 100 }),
       ]);
-      setProducts(productsData);
-      setCategories(categoriesData);
+      setProducts(productsResult.items);
+      setTotalItems(productsResult.total);
+      setCategories(categoriesResult.items);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to load data');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePageChange = (newPage: number) => setPage(newPage);
+  const handleLimitChange = (newLimit: number) => {
+    setLimit(newLimit);
+    setPage(1);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -49,6 +62,7 @@ const Products = () => {
       });
       setShowForm(false);
       setFormData({ name: '', description: '', price: '', stock: '', categoryId: '' });
+      setPage(1);
       loadData();
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to create product');
@@ -82,7 +96,10 @@ const Products = () => {
         <label>Filter by Category: </label>
         <select
           value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
+          onChange={(e) => {
+            setSelectedCategory(e.target.value);
+            setPage(1);
+          }}
           style={{ padding: '8px', marginLeft: '10px' }}
         >
           <option value="">All Categories</option>
@@ -188,6 +205,13 @@ const Products = () => {
             ))}
           </tbody>
         </table>
+        <Pagination
+          page={page}
+          limit={limit}
+          totalItems={totalItems}
+          onPageChange={handlePageChange}
+          onLimitChange={handleLimitChange}
+        />
       </div>
     </div>
   );

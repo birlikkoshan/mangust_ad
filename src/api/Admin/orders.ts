@@ -82,10 +82,19 @@ function normalizeOrder(raw: any): Order {
   };
 }
 
+export interface PaginatedOrders {
+  items: Order[];
+  total?: number;
+}
+
 export const ordersAPI = {
-  getAll: async (): Promise<Order[]> => {
-    const response = await apiClient.get('/orders');
-    return response.data.map(normalizeOrder);
+  getAll: async (params?: { offset?: number; limit?: number }): Promise<PaginatedOrders> => {
+    const { offset = 0, limit = 10 } = params ?? {};
+    const response = await apiClient.get('/orders', { params: { offset, limit } });
+    const raw = response.data?.data ?? response.data;
+    const items = Array.isArray(raw) ? raw.map(normalizeOrder) : [];
+    const total = response.data?.total ?? (Array.isArray(response.data) ? undefined : response.data?.total);
+    return { items, total };
   },
 
   getById: async (id: string): Promise<Order> => {

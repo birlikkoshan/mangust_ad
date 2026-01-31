@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ordersAPI, Order } from '../../api/Admin/orders';
 import { productsAPI, Product } from '../../api/Admin/products';
+import Pagination from '../../components/Admin/Pagination';
 
 const Orders = () => {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -9,20 +10,25 @@ const Orders = () => {
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [orderItems, setOrderItems] = useState<{ productId: string; quantity: number }[]>([]);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [totalItems, setTotalItems] = useState<number | undefined>(undefined);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [page, limit]);
 
   const loadData = async () => {
     try {
       setLoading(true);
-      const [ordersData, productsData] = await Promise.all([
-        ordersAPI.getAll(),
-        productsAPI.getAll(),
+      const offset = (page - 1) * limit;
+      const [ordersResult, productsResult] = await Promise.all([
+        ordersAPI.getAll({ offset, limit }),
+        productsAPI.getAll(undefined, { offset: 0, limit: 500 }),
       ]);
-      setOrders(ordersData);
-      setProducts(productsData);
+      setOrders(ordersResult.items);
+      setTotalItems(ordersResult.total);
+      setProducts(productsResult.items);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to load data');
     } finally {
@@ -54,6 +60,12 @@ const Orders = () => {
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to create order');
     }
+  };
+
+  const handlePageChange = (newPage: number) => setPage(newPage);
+  const handleLimitChange = (newLimit: number) => {
+    setLimit(newLimit);
+    setPage(1);
   };
 
   const handleUpdateStatus = async (id: string, status: string) => {
@@ -176,6 +188,13 @@ const Orders = () => {
             ))}
           </tbody>
         </table>
+        <Pagination
+          page={page}
+          limit={limit}
+          totalItems={totalItems}
+          onPageChange={handlePageChange}
+          onLimitChange={handleLimitChange}
+        />
       </div>
     </div>
   );

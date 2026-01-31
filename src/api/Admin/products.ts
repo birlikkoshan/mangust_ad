@@ -84,12 +84,24 @@ function normalizeProduct(raw: any): Product {
   };
 }
 
+export interface PaginatedProducts {
+  items: Product[];
+  total?: number;
+}
+
 export const productsAPI = {
-  getAll: async (categoryId?: string): Promise<Product[]> => {
-    const params = categoryId ? { categoryId } : {};
+  getAll: async (
+    categoryId?: string,
+    pagination?: { offset?: number; limit?: number }
+  ): Promise<PaginatedProducts> => {
+    const { offset = 0, limit = 10 } = pagination ?? {};
+    const params: Record<string, number | string> = { offset, limit };
+    if (categoryId) params.categoryId = categoryId;
     const response = await apiClient.get('/products', { params });
     const raw = extractArray(response.data);
-    return raw.map(normalizeProduct);
+    const items = raw.map(normalizeProduct);
+    const total = response.data?.total;
+    return { items, total };
   },
 
   getById: async (id: string): Promise<Product> => {
