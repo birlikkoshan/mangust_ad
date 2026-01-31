@@ -8,7 +8,8 @@ export interface OrderItem {
     price: number;
   };
   quantity: number;
-  price: number;
+  price: number;      // unit price (optional from API)
+  lineTotal?: number; // total for this line (price × quantity)
 }
 
 export interface Order {
@@ -48,11 +49,19 @@ function normalizeOrderItem(raw: any): OrderItem {
       }
     : undefined;
 
+  const quantity = raw.quantity ?? 0;
+  const lineTotal = raw.lineTotal ?? raw.line_total;
+  const price = raw.price ?? raw.unitPrice ?? raw.unit_price;
+  // Derive unit price from lineTotal if missing
+  const unitPrice = price ?? (quantity > 0 && lineTotal != null ? lineTotal / quantity : 0);
+  const lineTotalValue = lineTotal ?? (unitPrice * quantity);
+
   return {
     productId: raw.productId ?? raw.product_id ?? "",
     product,
-    quantity: raw.quantity ?? 0,
-    price: raw.price ?? 0,
+    quantity,
+    price: unitPrice,
+    lineTotal: lineTotalValue,
   };
 }
 
@@ -75,7 +84,7 @@ function normalizeOrder(raw: any): Order {
     userId: raw.userId ?? raw.user_id ?? "",
     user,
     items,
-    total: raw.total ?? 0,
+    total: raw.totalPrice ?? raw.total_price ?? raw.total ?? 0,
     status: raw.status ?? "",
     createdAt: raw.createdAt ?? raw.created_at ?? "",
     updatedAt: raw.updatedAt ?? raw.updated_at ?? "",
@@ -99,9 +108,10 @@ export const ordersAPI = {
   getAll: async (params?: { offset?: number; limit?: number }): Promise<PaginatedOrders> => {
     const { offset = 0, limit = 10 } = params ?? {};
     const response = await apiClient.get('/orders', { params: { offset, limit } });
-    const raw = response.data?.data ?? response.data;
+    const data = response.data ?? {};
+    const raw = Array.isArray(data.items) ? data.items : (data.data ?? (Array.isArray(data) ? data : []));
     const items = Array.isArray(raw) ? raw.map(normalizeOrder) : [];
-    const total = response.data?.total ?? (Array.isArray(response.data) ? undefined : response.data?.total);
+    const total = data.total;
     return { items, total };
   },
 
@@ -123,9 +133,10 @@ export const ordersAPI = {
 
   find: async (params: FindOrdersParams): Promise<PaginatedOrders> => {
     const response = await apiClient.post('/admin/orders/find', params);
-    const raw = response.data?.data ?? response.data;
+    const data = response.data ?? {};
+    const raw = Array.isArray(data.items) ? data.items : (data.data ?? (Array.isArray(data) ? data : []));
     const items = Array.isArray(raw) ? raw.map(normalizeOrder) : [];
-    const total = response.data?.total;
+    const total = data.total;
     return { items, total };
   },
 

@@ -59,18 +59,24 @@ const OrderDetail = () => {
           <thead>
             <tr>
               <th>Product</th>
+              <th>Unit Price</th>
               <th>Quantity</th>
-              <th>Price</th>
+              <th>Line Total</th>
             </tr>
           </thead>
           <tbody>
-            {order.items.map((item, idx) => (
-              <tr key={idx}>
-                <td>{item.product?.name || item.productId}</td>
-                <td>{item.quantity}</td>
-                <td>${(item.price * item.quantity).toFixed(2)}</td>
-              </tr>
-            ))}
+            {(order.items ?? []).map((item, idx) => {
+              const unitPrice = item.price ?? 0;
+              const lineTotal = item.lineTotal ?? unitPrice * item.quantity;
+              return (
+                <tr key={idx}>
+                  <td>{item.product?.name || item.productId}</td>
+                  <td>${unitPrice.toFixed(2)}</td>
+                  <td>{item.quantity}</td>
+                  <td><strong>${lineTotal.toFixed(2)}</strong></td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
         </div>

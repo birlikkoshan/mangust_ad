@@ -43,9 +43,10 @@ export const categoriesAPI = {
   getAll: async (params?: { offset?: number; limit?: number }): Promise<PaginatedCategories> => {
     const { offset = 0, limit = 10 } = params ?? {};
     const response = await apiClient.get("/categories", { params: { offset, limit } });
-    const raw = extractArray(response.data);
+    const data = response.data ?? {};
+    const raw = Array.isArray(data.items) ? data.items : extractArray(data);
     const items = raw.map(normalizeCategory);
-    const total = response.data?.total ?? response.data?.total_count;
+    const total = data.total ?? data.total_count;
     return { items, total };
   },
 

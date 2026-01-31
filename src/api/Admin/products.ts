@@ -102,9 +102,10 @@ export const productsAPI = {
     const params: Record<string, number | string> = { offset, limit };
     if (categoryId) params.categoryId = categoryId;
     const response = await apiClient.get('/products', { params });
-    const raw = extractArray(response.data);
+    const data = response.data ?? {};
+    const raw = Array.isArray(data.items) ? data.items : extractArray(data);
     const items = raw.map(normalizeProduct);
-    const total = response.data?.total;
+    const total = data.total;
     return { items, total };
   },
 

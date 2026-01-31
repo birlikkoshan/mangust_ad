@@ -195,7 +195,7 @@ const Wishlist = () => {
                 totalItems={totalItems}
                 onPageChange={handlePageChange}
                 onLimitChange={handleLimitChange}
-                limitOptions={[8, 12, 24, 48]}
+                limitOptions={[5, 10, 20, 50]}
               />
             </>
           )}
