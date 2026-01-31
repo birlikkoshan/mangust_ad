@@ -58,7 +58,11 @@ const Login = () => {
       notifyAuthChanged();
       setSuccess('Login successful');
 
-      navigate('/products');
+      if (user.role === 'admin') {
+        navigate('/products');
+      } else {
+        navigate('/profile');
+      }
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {

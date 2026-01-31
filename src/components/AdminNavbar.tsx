@@ -35,9 +35,10 @@ const Navbar = () => {
       <nav className="navbar">
         <div className="container" style={{ justifyContent: 'space-between' }}>
           <div>
-            <Link to="/login">Mangust AD</Link>
+            <Link to="/profile">Mangust AD</Link>
           </div>
-          <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <Link to="/profile">Profile</Link>
             <span style={{ marginRight: '10px' }}>{user.name || user.email}</span>
             <button className="btn btn-primary" onClick={handleLogout}>
               Logout
@@ -61,6 +62,7 @@ const Navbar = () => {
           <Link to="/orders">Orders</Link>
           <Link to="/stats">Statistics</Link>
           <Link to="/admin/add">Add admin</Link>
+          <Link to="/profile">Profile</Link>
           <span style={{ marginLeft: '20px', marginRight: '10px' }}>
             {user.name || user.email}
           </span>

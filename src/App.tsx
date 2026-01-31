@@ -10,6 +10,7 @@ import Categories from './pages/Admin/Categories';
 import Orders from './pages/Admin/Orders';
 import Stats from './pages/Admin/Stats';
 import AddAdmin from './pages/Admin/AddAdmin';
+import Profile from './pages/User/Profile';
 import './App.css';
 
 type Role = 'admin' | 'user' | null;
@@ -59,12 +60,18 @@ function App() {
   return (
     <Router>
       <div className="App">
-        {isAdmin ? <AdminNavbar /> : <UserNavbar />}
+        {isAuthenticated ? <AdminNavbar /> : <UserNavbar />}
         <div className="container">
           <Routes>
             {/* Auth routes (visible for everyone) */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+
+            {/* Shared authenticated route */}
+            <Route
+              path="/profile"
+              element={isAuthenticated ? <Profile /> : <Navigate to="/login" />}
+            />
 
             {/* Admin-only routes */}
             <Route
@@ -93,8 +100,17 @@ function App() {
             />
 
             {/* Default routes */}
-            {/* <Route path="/" element={<Navigate to="/login" />} /> */}
-            <Route path="*" element={<Navigate to="/login" />} />
+            <Route
+              path="/"
+              element={
+                isAuthenticated
+                  ? isAdmin
+                    ? <Navigate to="/products" />
+                    : <Navigate to="/profile" />
+                  : <Navigate to="/login" />
+              }
+            />
+            <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </div>
       </div>

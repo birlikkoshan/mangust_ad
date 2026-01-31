@@ -161,3 +161,14 @@ code {
   color: #721c24;
   border: 1px solid #f5c6cb;
 }
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #eef2f7;
+  color: #343a40;
+  font-size: 13px;
+  font-weight: 600;
+}
