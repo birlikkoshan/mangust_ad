@@ -24,12 +24,10 @@ const UserNavbar = () => {
 
   if (!isAuthenticated) {
     return (
-      <nav className="navbar">
-        <div className="container">
-          <div>
-            <Link to="/">Mangust AD</Link>
-          </div>
-          <div>
+      <nav className="user-navbar">
+        <div className="user-nav-inner">
+          <Link to="/" className="user-nav-brand">Mangust AD</Link>
+          <div className="user-nav-links">
             <Link to="/login">Login</Link>
             <Link to="/register">Register</Link>
           </div>
@@ -43,18 +41,18 @@ const UserNavbar = () => {
   }
 
   return (
-    <nav className="navbar">
-      <div className="container">
-        <div>
-          <Link to="/shop">Mangust AD</Link>
-          <Link to="/shop">Products</Link>
+    <nav className="user-navbar">
+      <div className="user-nav-inner">
+        <div className="user-nav-links">
+          <Link to="/shop" className="user-nav-brand">Mangust AD</Link>
+          <Link to="/shop/catalog">Catalog</Link>
           <Link to="/shop/orders">Orders</Link>
           <Link to="/shop/wishlist">Wishlist</Link>
           <Link to="/shop/profile">Profile</Link>
         </div>
-        <div>
-          <span style={{ marginRight: "10px" }}>{user.name || user.email}</span>
-          <button className="btn btn-primary" onClick={handleLogout}>
+        <div className="user-nav-links">
+          <span style={{ marginRight: "12px", fontSize: "14px", opacity: 0.9 }}>{user.name || user.email}</span>
+          <button className="user-btn user-btn-primary" onClick={handleLogout}>
             Logout
           </button>
         </div>

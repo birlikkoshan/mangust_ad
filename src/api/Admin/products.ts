@@ -6,10 +6,12 @@ export interface Product {
   description: string;
   price: number;
   stock: number;
+  imageUrl?: string;
   categoryId: string;
   category?: {
     id: string;
     name: string;
+    imageUrl?: string;
   };
   reviews: Review[];
   createdAt: string;
@@ -63,6 +65,7 @@ function normalizeProduct(raw: any): Product {
     ? {
         id: raw.category.id ?? raw.category._id ?? "",
         name: raw.category.name ?? "",
+        imageUrl: raw.category.imageUrl ?? raw.category.image_url ?? "",
       }
     : undefined;
 
@@ -76,6 +79,7 @@ function normalizeProduct(raw: any): Product {
     description: raw.description ?? "",
     price: raw.price ?? 0,
     stock: raw.stock ?? 0,
+    imageUrl: raw.imageUrl ?? raw.image_url ?? "",
     categoryId: raw.categoryId ?? raw.category_id ?? "",
     category,
     reviews,

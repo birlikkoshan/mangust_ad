@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ordersAPI, Order, FindOrdersParams } from '../../api/Admin/orders';
 import { productsAPI, Product } from '../../api/Admin/products';
-import Pagination from '../../components/Admin/Pagination';
+import Pagination from '../../components/Pagination';
 
 const Orders = () => {
   const [orders, setOrders] = useState<Order[]>([]);

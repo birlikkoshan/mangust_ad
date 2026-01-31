@@ -1,15 +1,24 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { ordersAPI } from '../../api/Admin/orders';
 import { productsAPI, Product } from '../../api/Admin/products';
 
+interface PreselectedItem {
+  productId: string;
+  quantity: number;
+}
+
 const CreateOrder = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const preselected = (location.state as { preselectedItems?: PreselectedItem[] })?.preselectedItems;
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [orderItems, setOrderItems] = useState<{ productId: string; quantity: number }[]>([]);
+  const [orderItems, setOrderItems] = useState<{ productId: string; quantity: number }[]>(
+    preselected && preselected.length > 0 ? preselected : []
+  );
 
   useEffect(() => {
     loadProducts();
@@ -56,21 +65,18 @@ const CreateOrder = () => {
     }
   };
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <div className="user-container" style={{ padding: '48px 20px', textAlign: 'center' }}>Loading...</div>;
 
   return (
-    <div>
-      <button
-        className="btn btn-primary"
-        onClick={() => navigate('/shop/orders')}
-        style={{ marginBottom: '20px' }}
-      >
-        ← Back to Orders
-      </button>
+    <div className="user-page">
+      <div className="user-container">
+        <Link to="/shop/orders" className="user-btn user-btn-outline" style={{ marginBottom: '24px', display: 'inline-block', textDecoration: 'none' }}>
+          ← Back to Orders
+        </Link>
 
-      {error && <div className="alert alert-error">{error}</div>}
+        {error && <div className="user-alert-error">{error}</div>}
 
-      <div className="card">
+        <div className="user-card">
         <h2>Create Order</h2>
         <form onSubmit={handleSubmit}>
           {orderItems.map((item, index) => (
@@ -82,6 +88,7 @@ const CreateOrder = () => {
                 value={item.productId}
                 onChange={(e) => handleItemChange(index, 'productId', e.target.value)}
                 required
+                className="user-filter-select"
                 style={{ flex: 2 }}
               >
                 <option value="">Select Product</option>
@@ -125,6 +132,7 @@ const CreateOrder = () => {
             {submitting ? 'Creating...' : 'Create Order'}
           </button>
         </form>
+        </div>
       </div>
     </div>
   );

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { productsAPI, Product } from '../../api/Admin/products';
 import { categoriesAPI, Category } from '../../api/Admin/categories';
-import Pagination from '../../components/Admin/Pagination';
+import Pagination from '../../components/Pagination';
 
 const Products = () => {
   const [products, setProducts] = useState<Product[]>([]);

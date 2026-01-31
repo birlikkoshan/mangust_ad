@@ -58,7 +58,7 @@ const Login = () => {
       notifyAuthChanged();
       setSuccess('Login successful');
 
-      navigate(user.role === 'admin' ? '/products' : '/shop');
+      navigate(user.role === 'admin' ? '/admin/dashboard' : '/shop');
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {

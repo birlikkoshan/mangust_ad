@@ -4,6 +4,7 @@ export interface Category {
   id: string;
   name: string;
   description: string;
+  imageUrl?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -19,15 +20,17 @@ function normalizeCategory(raw: any): Category {
     id: raw.id ?? raw._id ?? "",
     name: raw.name ?? "",
     description: raw.description ?? "",
+    imageUrl: raw.imageUrl ?? raw.image_url ?? "",
     createdAt: raw.createdAt ?? raw.created_at ?? "",
     updatedAt: raw.updatedAt ?? raw.updated_at ?? "",
   };
 }
 
-// Helper to extract array from response (handles { data: [...] } vs [...])
+// Helper to extract array from response (handles { data: [...] } vs { items: [...] } vs [...])
 function extractArray(data: any): any[] {
   if (Array.isArray(data)) return data;
   if (data && Array.isArray(data.data)) return data.data;
+  if (data && Array.isArray(data.items)) return data.items;
   return [];
 }
 
@@ -42,7 +45,7 @@ export const categoriesAPI = {
     const response = await apiClient.get("/categories", { params: { offset, limit } });
     const raw = extractArray(response.data);
     const items = raw.map(normalizeCategory);
-    const total = response.data?.total;
+    const total = response.data?.total ?? response.data?.total_count;
     return { items, total };
   },
 

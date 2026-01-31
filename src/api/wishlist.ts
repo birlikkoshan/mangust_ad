@@ -9,6 +9,8 @@ export interface WishlistItem {
     price: number;
     description?: string;
     stock?: number;
+    categoryId?: string;
+    category?: { name: string; imageUrl?: string };
   };
   userId?: string;
   createdAt?: string;
@@ -17,6 +19,7 @@ export interface WishlistItem {
 function extractArray(data: any): any[] {
   if (Array.isArray(data)) return data;
   if (data && Array.isArray(data.data)) return data.data;
+  if (data && Array.isArray(data.items)) return data.items;
   return [];
 }
 
@@ -28,6 +31,10 @@ function normalizeWishlistItem(raw: any): WishlistItem {
         price: raw.product.price ?? 0,
         description: raw.product.description,
         stock: raw.product.stock,
+        categoryId: raw.product.categoryId ?? raw.product.category_id,
+        category: raw.product.category
+          ? { name: raw.product.category.name ?? '', imageUrl: raw.product.category.imageUrl ?? raw.product.category.image_url }
+          : undefined,
       }
     : undefined;
 
@@ -51,12 +58,12 @@ export const wishlistAPI = {
     const response = await apiClient.get('/wishlist', { params: { offset, limit } });
     const raw = extractArray(response.data);
     const items = raw.map(normalizeWishlistItem);
-    const total = response.data?.total;
+    const total = response.data?.total ?? response.data?.total_count;
     return { items, total };
   },
 
   add: async (productId: string): Promise<WishlistItem> => {
-    const response = await apiClient.post('/wishlist', { productId });
+    const response = await apiClient.post('/wishlist', { product_id: productId, productId });
     const raw = response.data?.data ?? response.data;
     return normalizeWishlistItem(raw);
   },

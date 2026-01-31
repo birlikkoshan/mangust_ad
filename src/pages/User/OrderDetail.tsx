@@ -26,22 +26,23 @@ const OrderDetail = () => {
     }
   };
 
-  if (loading) return <div>Loading...</div>;
-  if (!order) return <div>{error ? <div className="alert alert-error">{error}</div> : 'Order not found'}</div>;
+  if (loading) return <div className="user-container" style={{ padding: '48px 20px', textAlign: 'center' }}>Loading...</div>;
+  if (!order) return <div className="user-container">{error ? <div className="user-alert-error">{error}</div> : <p style={{ color: 'var(--user-text-muted)' }}>Order not found</p>}</div>;
 
   return (
-    <div>
-      <button
-        className="btn btn-primary"
-        onClick={() => navigate('/shop/orders')}
-        style={{ marginBottom: '20px' }}
-      >
-        ← Back to Orders
-      </button>
+    <div className="user-page">
+      <div className="user-container">
+        <button
+          className="user-btn user-btn-outline"
+          onClick={() => navigate('/shop/orders')}
+          style={{ marginBottom: '24px' }}
+        >
+          ← Back to Orders
+        </button>
 
-      {error && <div className="alert alert-error">{error}</div>}
+        {error && <div className="user-alert-error">{error}</div>}
 
-      <div className="card">
+        <div className="user-card">
         <h1>Order #{order.id.substring(0, 8)}...</h1>
         <p>
           <strong>Status:</strong> {order.status}
@@ -72,6 +73,7 @@ const OrderDetail = () => {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );

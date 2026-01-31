@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ordersAPI, Order } from '../../api/Admin/orders';
-import Pagination from '../../components/Admin/Pagination';
+import Pagination from '../../components/Pagination';
 
 const OrderList = () => {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -35,24 +35,25 @@ const OrderList = () => {
     setPage(1);
   };
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <div className="user-container" style={{ padding: '48px 20px', textAlign: 'center' }}>Loading...</div>;
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h1>My Orders</h1>
-        <Link to="/shop/orders/new" className="btn btn-primary">
-          Create Order
-        </Link>
-      </div>
+    <div className="user-page">
+      <div className="user-container">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
+          <h1 style={{ color: 'var(--user-text)' }}>My Orders</h1>
+          <Link to="/shop/orders/new" className="user-btn user-btn-primary" style={{ textDecoration: 'none' }}>
+            Create Order
+          </Link>
+        </div>
 
-      {error && <div className="alert alert-error">{error}</div>}
+        {error && <div className="user-alert-error">{error}</div>}
 
-      <div className="card">
-        {orders.length === 0 ? (
-          <p>No orders yet. <Link to="/shop/orders/new">Create your first order</Link></p>
-        ) : (
-          <table className="table">
+        <div className="user-card">
+          {orders.length === 0 ? (
+            <p style={{ color: 'var(--user-text-muted)' }}>No orders yet. <Link to="/shop/orders/new" style={{ color: 'var(--user-accent)' }}>Create your first order</Link></p>
+          ) : (
+            <table className="table" style={{ border: '1px solid var(--user-bg-alt)' }}>
             <thead>
               <tr>
                 <th>Order ID</th>
@@ -72,7 +73,7 @@ const OrderList = () => {
                   <td>{order.status}</td>
                   <td>{new Date(order.createdAt).toLocaleDateString()}</td>
                   <td>
-                    <Link to={`/shop/orders/${order.id}`} className="btn btn-primary">
+                    <Link to={`/shop/orders/${order.id}`} className="user-btn user-btn-primary" style={{ textDecoration: 'none' }}>
                       View
                     </Link>
                   </td>
@@ -80,7 +81,7 @@ const OrderList = () => {
               ))}
             </tbody>
           </table>
-        )}
+          )}
         <Pagination
           page={page}
           limit={limit}
@@ -88,6 +89,7 @@ const OrderList = () => {
           onPageChange={handlePageChange}
           onLimitChange={handleLimitChange}
         />
+        </div>
       </div>
     </div>
   );

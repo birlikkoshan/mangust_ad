@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { categoriesAPI, Category } from "../../api/Admin/categories";
-import Pagination from "../../components/Admin/Pagination";
+import Pagination from "../../components/Pagination";
 
 const Categories = () => {
   const [categories, setCategories] = useState<Category[]>([]);
