@@ -12,6 +12,7 @@ import OrderDetail from './pages/Admin/OrderDetail';
 import Stats from './pages/Admin/Stats';
 import Dashboard from './pages/Admin/Dashboard';
 import AddAdmin from './pages/Admin/AddAdmin';
+import Users from './pages/Admin/Users';
 import UserMainPage from './pages/User/MainPage';
 import UserProductCatalog from './pages/User/ProductCatalog';
 import UserProductDetail from './pages/User/ProductDetail';
@@ -64,6 +65,7 @@ function AppLayout({ isAdmin, isAuthenticated }: { isAdmin: boolean; isAuthentic
           <Route path="/admin/orders" element={isAdmin ? <Orders /> : <Navigate to="/login" />} />
           <Route path="/admin/orders/:id" element={isAdmin ? <OrderDetail /> : <Navigate to="/login" />} />
           <Route path="/admin/stats" element={isAdmin ? <Stats /> : <Navigate to="/login" />} />
+          <Route path="/admin/users" element={isAdmin ? <Users /> : <Navigate to="/login" />} />
           <Route path="/admin/add" element={isAdmin ? <AddAdmin /> : <Navigate to="/login" />} />
 
           <Route path="/shop" element={isAuthenticated ? <UserMainPage /> : <Navigate to="/login" />} />

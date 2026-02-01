@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ordersAPI, Order, FindOrdersParams } from '../../api/Admin/orders';
 import { productsAPI, Product } from '../../api/Admin/products';
+import { usersAPI, AdminUser } from '../../api/Admin/users';
 import Pagination from '../../components/Pagination';
 
 const Orders = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
@@ -36,6 +38,8 @@ const Orders = () => {
         ordersResult = await ordersAPI.getAll({ offset, limit });
       }
       const productsResult = await productsAPI.getAll(undefined, { offset: 0, limit: 500 });
+      const usersResult = await usersAPI.getAllAdmin();
+      setUsers(usersResult.items);         
       setOrders(ordersResult.items);
       setTotalItems(ordersResult.total);
       setProducts(productsResult.items);
@@ -219,7 +223,7 @@ const Orders = () => {
                 <td>
                   <Link to={`/admin/orders/${order.id}`}>{order.id.substring(0, 8)}...</Link>
                 </td>
-                <td>{order.user?.name || order.userId}</td>
+                <td>{order.user?.name || users.find((u) => u.id === order.userId)?.name || order.userId}</td>
                 <td>{order.items.length} item(s)</td>
                 <td>${order.total.toFixed(2)}</td>
                 <td>
