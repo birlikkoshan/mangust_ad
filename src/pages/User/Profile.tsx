@@ -124,7 +124,7 @@ const Profile = () => {
                     style={{ minHeight: '80px' }}
                   />
                 </div>
-                <div className="form-group">
+                {/* <div className="form-group">
                   <label>New Password (leave blank to keep)</label>
                   <input
                     type="password"
@@ -133,7 +133,7 @@ const Profile = () => {
                     placeholder="••••••••"
                     minLength={6}
                   />
-                </div>
+                </div> */}
                 <button type="submit" className="user-btn user-btn-primary" disabled={submitting}>
                   {submitting ? 'Saving...' : 'Save'}
                 </button>
